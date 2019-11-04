@@ -1,0 +1,7 @@
+.idea
+venv
+migrations/__pycache__/
+obar/__pycache__/
+obar/apis/__pycache__/
+obar/models/__pycache__/
+obar/obar_database.db
