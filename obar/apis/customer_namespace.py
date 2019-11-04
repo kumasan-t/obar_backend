@@ -40,6 +40,7 @@ customer_output_model = customer_ns.model('Customer Output', {
 class CustomerListAPI(Resource):
 
     @customer_ns.doc('get_customer_list')
+    @customer_ns.response(200, 'Returns a list of customers')
     @customer_ns.response(500, 'Internal server error')
     @customer_ns.marshal_list_with(customer_output_model)
     def get(self):
@@ -48,10 +49,10 @@ class CustomerListAPI(Resource):
             customer_list = Customer.query.all()
         except OperationalError:
             raise InternalServerError(description='Customer table does not exists.')
-        return customer_list
+        return customer_list, 200
 
     @customer_ns.doc('post_customer')
-    @customer_ns.response(200, 'Success')
+    @customer_ns.response(201, 'Resource created')
     @customer_ns.response(409, 'The resource already exists')
     @customer_ns.response(500, 'Internal server error')
     @customer_ns.expect(customer_input_model, validate=True)
@@ -69,7 +70,7 @@ class CustomerListAPI(Resource):
         except IntegrityError:
             raise Conflict(description=new_customer.__repr__() + ' already exists')
         current_app.logger.info(new_customer.__repr__() + ' added to database.')
-        return 200
+        return {'message': 'Resource created'}, 201
 
 
 @customer_ns.route('/<string:id>')
