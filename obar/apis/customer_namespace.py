@@ -8,6 +8,10 @@ from obar import db
 
 customer_ns = Namespace('customer', description='Customer related operations')
 
+# Models defined for marshaling of input requests and responses.
+# TODO: create a custom Email field that validates email addresses
+# Refer to this for custom fields https://blog.fossasia.org/better-fields-and-validation-in-flask-restplus/
+
 customer_input_model = customer_ns.model('Customer Input', {
     'mail_address': fields.String(required=True,
                                   description='Customer mail address',
@@ -53,6 +57,9 @@ class CustomerListAPI(Resource):
     @customer_ns.response(500, 'Internal server error')
     @customer_ns.marshal_list_with(customer_output_model)
     def get(self):
+        """
+        Returns a list of customers.
+        """
         customer_list = None
         try:
             customer_list = Customer.query.all()
@@ -66,6 +73,9 @@ class CustomerListAPI(Resource):
     @customer_ns.response(500, 'Internal server error')
     @customer_ns.expect(customer_input_model, validate=True)
     def post(self):
+        """
+        Creates a new customer.
+        """
         new_customer = Customer(customer_mail_address=request.json['mail_address'],
                                 customer_first_name=request.json['first_name'],
                                 customer_last_name=request.json['last_name'])
@@ -90,6 +100,9 @@ class CustomerAPI(Resource):
     @customer_ns.response(200, 'Success')
     @customer_ns.response(404, 'Customer not found')
     def get(self, id):
+        """
+        Get customer data.
+        """
         customer = Customer.query.filter_by(customer_mail_address=id).first()
         if customer is None:
             raise NotFound()
@@ -99,6 +112,9 @@ class CustomerAPI(Resource):
     @customer_ns.response(204, description='No content')
     @customer_ns.response(404, 'Customer not found')
     def delete(self, id):
+        """
+        Delete customer data.
+        """
         customer = Customer.query.filter_by(customer_mail_address=id).first()
         if customer is None:
             raise NotFound()
@@ -111,6 +127,9 @@ class CustomerAPI(Resource):
     @customer_ns.response(404, 'Customer not found')
     @customer_ns.expect(customer_put_model, validate=True)
     def put(self, id):
+        """
+        Edit customer data.
+        """
         customer = Customer.query.filter_by(customer_mail_address=id).first()
         if customer is None:
             raise NotFound()
