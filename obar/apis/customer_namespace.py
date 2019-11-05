@@ -1,7 +1,7 @@
 from flask import request, current_app
 from flask_restplus import Namespace, Resource, fields, abort
 from sqlalchemy.exc import OperationalError, IntegrityError
-from werkzeug.exceptions import Conflict, InternalServerError
+from werkzeug.exceptions import Conflict, InternalServerError, NotFound
 from obar.models import Customer
 from obar import db
 
@@ -31,6 +31,15 @@ customer_output_model = customer_ns.model('Customer Output', {
                                 description='The customer first name',
                                 attribute='customer_first_name'),
     'last_name': fields.String(required=True,
+                               description='The customer last name',
+                               attribute='customer_last_name')
+})
+
+customer_put_model = customer_ns.model('Customer Update', {
+    'first_name': fields.String(required=False,
+                                description='The customer first name',
+                                attribute='customer_first_name'),
+    'last_name': fields.String(required=False,
                                description='The customer last name',
                                attribute='customer_last_name')
 })
@@ -78,12 +87,36 @@ class CustomerAPI(Resource):
 
     @customer_ns.doc('get_customer')
     @customer_ns.marshal_with(customer_output_model)
+    @customer_ns.response(200, 'Success')
+    @customer_ns.response(404, 'Customer not found')
     def get(self, id):
-        return Customer.query.filter_by(customer_mail_address=id).first()
+        customer = Customer.query.filter_by(customer_mail_address=id).first()
+        if customer is None:
+            raise NotFound()
+        return customer, 200
 
     @customer_ns.doc('del_customer')
     @customer_ns.response(204, description='No content')
+    @customer_ns.response(404, 'Customer not found')
     def delete(self, id):
-        db.session.delete(Customer.query.filter_by(customer_mail_address=id).first())
+        customer = Customer.query.filter_by(customer_mail_address=id).first()
+        if customer is None:
+            raise NotFound()
+        db.session.delete(customer)
+        db.session.commit()
+        return 204
+
+    @customer_ns.doc('put_customer')
+    @customer_ns.response(204, 'Updated succesfully')
+    @customer_ns.response(404, 'Customer not found')
+    @customer_ns.expect(customer_put_model)
+    def put(self, id):
+        customer = Customer.query.filter_by(customer_mail_address=id).first()
+        if customer is None:
+            raise NotFound()
+        if 'first_name' in request.json.keys():
+            customer.customer_first_name = request.json['first_name']
+        if 'last_name' in request.json.keys():
+            customer.customer_last_name = request.json['last_name']
         db.session.commit()
         return 204
