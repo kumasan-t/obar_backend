@@ -10,37 +10,37 @@ customer_ns = Namespace('customer', description='Customer related operations')
 
 customer_input_model = customer_ns.model('Customer Input', {
     'mail_address': fields.String(required=True,
-                                  description='The customer mail address',
+                                  description='Customer mail address',
                                   attribute='customer_mail_address'),
     'pin': fields.String(required=True,
-                         description='The customer PIN',
+                         description='Customer PIN',
                          attribute='customer_pin_hash'),
     'first_name': fields.String(required=True,
-                                description='The customer first name',
+                                description='Customer first name',
                                 attribute='customer_first_name'),
     'last_name': fields.String(required=True,
-                               description='The customer last name',
+                               description='Customer last name',
                                attribute='customer_last_name')
 })
 
 customer_output_model = customer_ns.model('Customer Output', {
     'mail_address': fields.String(required=True,
-                                  description='The customer mail address',
+                                  description='Customer mail address',
                                   attribute='customer_mail_address'),
     'first_name': fields.String(required=True,
-                                description='The customer first name',
+                                description='Customer first name',
                                 attribute='customer_first_name'),
     'last_name': fields.String(required=True,
-                               description='The customer last name',
+                               description='Customer last name',
                                attribute='customer_last_name')
 })
 
 customer_put_model = customer_ns.model('Customer Update', {
     'first_name': fields.String(required=False,
-                                description='The customer first name',
+                                description='Customer first name',
                                 attribute='customer_first_name'),
     'last_name': fields.String(required=False,
-                               description='The customer last name',
+                               description='Customer last name',
                                attribute='customer_last_name')
 })
 
@@ -104,12 +104,12 @@ class CustomerAPI(Resource):
             raise NotFound()
         db.session.delete(customer)
         db.session.commit()
-        return 204
+        return '', 204
 
     @customer_ns.doc('put_customer')
     @customer_ns.response(204, 'Updated succesfully')
     @customer_ns.response(404, 'Customer not found')
-    @customer_ns.expect(customer_put_model)
+    @customer_ns.expect(customer_put_model, validate=True)
     def put(self, id):
         customer = Customer.query.filter_by(customer_mail_address=id).first()
         if customer is None:
@@ -119,4 +119,4 @@ class CustomerAPI(Resource):
         if 'last_name' in request.json.keys():
             customer.customer_last_name = request.json['last_name']
         db.session.commit()
-        return 204
+        return '', 204
