@@ -42,7 +42,7 @@ class ProductListAPI(Resource):
         try:
             product_list = Product.query.all()
         except OperationalError:
-            raise InternalServerError(description='Customer table does not exists.')
+            raise InternalServerError(description='Product table does not exists.')
         return product_list, 200
 
     @product_ns.doc('post_product')
