@@ -8,6 +8,7 @@ from obar import db
 product_ns = Namespace('product', description='Product related operations')
 
 # TODO: redefine product models according to API input and output requirements
+# TODO: change price field to float
 product_model = product_ns.model('Product', {
     'number': fields.Integer(required=True,
                              description='Product number',
