@@ -36,6 +36,7 @@ class Customer(db.Model):
         return '<Customer %r>' % self.customer_mail_address
 
 
+# TODO: add description (or name) field
 class Product(db.Model):
 
     __tablename__ = 'product'
