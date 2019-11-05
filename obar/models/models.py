@@ -1,3 +1,4 @@
+import uuid
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import check_password_hash, generate_password_hash
 db = SQLAlchemy()
@@ -36,27 +37,38 @@ class Customer(db.Model):
         return '<Customer %r>' % self.customer_mail_address
 
 
-# TODO: add description (or name) field
+# TODO: resolve product name conflict in case of upper and lower cases
+# TODO: consider adding slugify to product name for name standardization
+# For slugify refer to this https://github.com/un33k/python-slugify
 class Product(db.Model):
 
     __tablename__ = 'product'
 
-    product_number = db.Column(db.Integer(), primary_key=True)
+    product_name = db.Column(db.String(), unique=True)
+    product_code = db.Column(db.String(), primary_key=True)
     product_availability = db.Column(db.Boolean())
-    product_price = db.Column(db.Integer())
+    product_price = db.Column(db.Float())
     product_unit = db.Column(db.Integer())
     product_discount = db.Column(db.Float(), default=0)
     purchaseItem = db.relationship('PurchaseItem', backref='Product')
 
+    def __init__(self, product_name, product_availability, product_discount, product_price, product_unit):
+        self.product_name = product_name
+        self.product_availability = product_availability
+        self.product_price = product_price
+        self.product_unit = product_unit
+        self.product_discount = product_discount
+        self.product_code = uuid.uuid4().hex
+
     def __repr__(self):
-        return '<Product {}>'.format(self.product_number)
+        return '<Product {} {}>'.format(self.product_name, self.product_code)
 
 
 class PurchaseItem(db.Model):
     __tablename__ = 'purchase_item'
     purchase_item_number = db.Column(db.Integer(), primary_key=True)
     purchase_item_quantity = db.Column(db.Integer())
-    purchase_item_product_number = db.Column(db.Integer(), db.ForeignKey('product.product_number'))
+    purchase_item_product_code = db.Column(db.String(), db.ForeignKey('product.product_code'))
     purchase_item_purchase_number = db.Column(db.Integer(), db.ForeignKey('purchase.purchase_number'))
 
     def __repr__(self):

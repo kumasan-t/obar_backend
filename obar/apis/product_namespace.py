@@ -8,30 +8,35 @@ from obar import db
 product_ns = Namespace('product', description='Product related operations')
 
 # TODO: redefine product models according to API input and output requirements
-# TODO: change price field to float
 product_model = product_ns.model('Product', {
-    'number': fields.Integer(required=True,
-                             description='Product number',
-                             attribute='product_number'),
+    'name': fields.String(requred=True,
+                          description='Product name',
+                          attribute='product_name'),
     'availability': fields.Boolean(required=True,
                                    description='Product availability',
                                    attribute='product_availability'),
     'discount': fields.Float(required=True,
                              description='Product discount',
                              attribute='product_discount'),
-    'price': fields.Integer(required=True,
-                            description='Product description',
-                            attribute='product_price'),
+    'price': fields.Float(required=True,
+                          description='Product description',
+                          attribute='product_price'),
     'unit': fields.Integer(required=True,
                            description='Product unit',
                            attribute='product_unit')
+})
+
+product_output_model = product_ns.inherit('Product Output', product_model, {
+    'code': fields.String(required=True,
+                          description='Prodoct identifier',
+                          attribute='product_code')
 })
 
 
 @product_ns.route('/')
 class ProductListAPI(Resource):
 
-    @product_ns.marshal_list_with(product_model)
+    @product_ns.marshal_list_with(product_output_model)
     @product_ns.response(200, 'Return a list of products')
     @product_ns.response(500, 'Internal server error')
     @product_ns.doc('get_product_list')
@@ -49,12 +54,12 @@ class ProductListAPI(Resource):
     @product_ns.response(201, 'Resource created')
     @product_ns.response(500, 'Internal server error')
     @product_ns.response(409, 'Resource already exists')
-    @product_ns.expect(product_model)
+    @product_ns.expect(product_model, validate=True)
     def post(self):
         """
         Creates a new product
         """
-        new_product = Product(product_number=request.json['number'],
+        new_product = Product(product_name=request.json['name'],
                               product_availability=request.json['availability'],
                               product_discount=request.json['discount'],
                               product_price=request.json['price'],
@@ -67,4 +72,3 @@ class ProductListAPI(Resource):
         except IntegrityError:
             raise Conflict(description=new_product.__repr__() + ' already exists')
         return {'message': 'Resource created'}, 201
-
