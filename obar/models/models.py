@@ -8,7 +8,7 @@ class Purchase(db.Model):
 
     __tablename__ = 'purchase'
 
-    purchase_number = db.Column(db.Integer(), primary_key=True)
+    purchase_number = db.Column(db.Integer(), primary_key=True, autoincrement=True)
     purchase_date = db.Column(db.Date())
     purchase_customer_mail_address = db.Column(db.String(), db.ForeignKey('customer.customer_mail_address'))
     purchase_item = db.relationship('PurchaseItem')
