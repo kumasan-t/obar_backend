@@ -18,7 +18,24 @@ purchase_model = purchase_ns.model('Purchase', {
 
 purchase_output_model = purchase_ns.inherit('Purchase Output', purchase_model, {
     'number': fields.Integer(required=True,
-                                      description='Purchase number',
-                                      attribute='purchase_number')
+                             description='Purchase number',
+                             attribute='purchase_number')
 })
 
+
+@purchase_ns.route('/')
+class PurchaseListAPI(Resource):
+
+    @purchase_ns.marshal_list_with(purchase_output_model)
+    @purchase_ns.response(200, 'Return a list of purchases')
+    @purchase_ns.response(500, 'Internal server error')
+    @purchase_ns.doc('get_purchase_list')
+    def get(self):
+        """
+        Returns a list of Purchases
+        """
+        try:
+            purchase_list = Purchase.query.all()
+        except OperationalError:
+            raise InternalServerError(description='Purchase table does not exists')
+        return purchase_list, 200
