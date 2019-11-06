@@ -1,4 +1,4 @@
-from werkzeug.exceptions import InternalServerError, Conflict
+from werkzeug.exceptions import InternalServerError, Conflict, NotFound
 from sqlalchemy.exc import OperationalError, IntegrityError
 from flask import request
 from flask_restplus import Namespace, Resource, fields
@@ -30,6 +30,25 @@ product_output_model = product_ns.inherit('Product Output', product_model, {
     'code': fields.String(required=True,
                           description='Prodoct identifier',
                           attribute='product_code')
+})
+
+
+product_put_model = product_ns.model('Product Update', {
+    'name': fields.String(requred=False,
+                          description='Product name',
+                          attribute='product_name'),
+    'availability': fields.Boolean(required=False,
+                                   description='Product availability',
+                                   attribute='product_availability'),
+    'discount': fields.Float(required=False,
+                             description='Product discount',
+                             attribute='product_discount'),
+    'price': fields.Float(required=False,
+                          description='Product description',
+                          attribute='product_price'),
+    'unit': fields.Integer(required=False,
+                           description='Product unit',
+                           attribute='product_unit')
 })
 
 
@@ -72,3 +91,76 @@ class ProductListAPI(Resource):
         except IntegrityError:
             raise Conflict(description=new_product.__repr__() + ' already exists')
         return {'message': 'Resource created'}, 201
+
+
+@product_ns.route('/<string:code>')
+class ProductAPI(Resource):
+
+    @product_ns.doc('get_product')
+    @product_ns.marshal_with(product_output_model)
+    @product_ns.response(200, 'Success')
+    @product_ns.response(404, 'Product not found')
+    def get(self, code):
+        """
+        Get product data
+        """
+        product = Product.query.filter_by(product_code=code).first()
+        if product is None:
+            raise NotFound()
+        return product, 200
+
+    @product_ns.doc('delete_product')
+    @product_ns.response(204, 'Success')
+    @product_ns.response(404, 'Product not found')
+    def delete(self, code):
+        """
+        Delete a product
+        """
+        product = Product.query.filter_by(product_code=code).first()
+        if product is None:
+            raise NotFound()
+        db.session.delete(product)
+        db.session.commit()
+        return '', 204
+
+    @product_ns.doc('delete_product')
+    @product_ns.response(204, 'Success')
+    @product_ns.response(404, 'Product not found')
+    def delete(self, code):
+        """
+        Delete a product
+        """
+        product = Product.query.filter_by(product_code=code).first()
+        if product is None:
+            raise NotFound()
+        db.session.delete(product)
+        db.session.commit()
+        return '', 204
+
+    @product_ns.doc('put_product')
+    @product_ns.response(204, 'Updated succesfully')
+    @product_ns.response(404, 'product not found')
+    @product_ns.response(409, 'Conflict in product resources')
+    @product_ns.expect(product_put_model, validate=True)
+    def put(self, code):
+        """
+        Edit product data.
+        """
+        product = Product.query.filter_by(product_code=code).first()
+        if product is None:
+            raise NotFound()
+        if 'name' in request.json.keys():
+            product.product_name = request.json['name']
+        if 'availability' in request.json.keys():
+            product.product_availability = request.json['availability']
+        if 'price' in request.json.keys():
+            product.product_price = request.json['price']
+        if 'unit' in request.json.keys():
+            product.product_unit = request.json['unit']
+        if 'discount' in request.json.keys():
+            product.product_discount = request.json['discount']
+        try:
+            db.session.commit()
+        except IntegrityError:
+            raise Conflict('Attribute must be unique')
+        return '', 204
