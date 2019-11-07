@@ -7,7 +7,7 @@ from flask_restplus import Api
 from flask.logging import default_handler
 from sqlalchemy import event
 from sqlite3 import Connection as SQLite3Connection
-from obar.apis import customer_namespace, product_namespace, purchase_namespace
+from obar.apis import customer_namespace, product_namespace, purchase_namespace, operation_namespace
 
 
 migrate = Migrate()
@@ -58,6 +58,7 @@ def create_app(test_config=None):
     api.add_namespace(customer_namespace.customer_ns)
     api.add_namespace(product_namespace.product_ns)
     api.add_namespace(purchase_namespace.purchase_ns)
+    api.add_namespace(operation_namespace.operation_ns)
     api.init_app(app)
     # Ensure the instance folder exists, otherwise create it.
     try:
