@@ -33,7 +33,6 @@ class OperationAPI(Resource):
         """
 
         customer = Customer.query.filter_by(customer_mail_address=request.json['customer_mail_address']).first()
-        # FIXME: Purchase number is a placeholder, need to change the field to UUID
         purchase = Purchase(purchase_date=dt.now(),
                             purchase_customer_mail_address=customer.customer_mail_address)
 
@@ -68,7 +67,6 @@ class OperationAPI(Resource):
             # update the product quantity
             product.product_quantity = product.product_quantity - details['purchase_quantity']
             # create a new association object between a purchase and a product
-            # FIXME: PurchaseItem number is a placeholder, need to change its model
             purchase_item = PurchaseItem(purchase_item_product_code_uuid=product.product_code_uuid,
                                          purchase_item_purchase_code_uuid=purchase.purchase_code_uuid,
                                          purchase_item_quantity=details['purchase_quantity'])
