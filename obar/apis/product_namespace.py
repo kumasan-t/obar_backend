@@ -21,15 +21,15 @@ product_model = product_ns.model('Product', {
     'price': fields.Float(required=True,
                           description='Product description',
                           attribute='product_price'),
-    'unit': fields.Integer(required=True,
-                           description='Product unit',
-                           attribute='product_unit')
+    'quantity': fields.Integer(required=True,
+                               description='Product quantity',
+                               attribute='product_quantity')
 })
 
 product_output_model = product_ns.inherit('Product Output', product_model, {
     'code': fields.String(required=True,
                           description='Prodoct identifier',
-                          attribute='product_code')
+                          attribute='product_code_uuid')
 })
 
 
@@ -46,9 +46,9 @@ product_put_model = product_ns.model('Product Update', {
     'price': fields.Float(required=False,
                           description='Product description',
                           attribute='product_price'),
-    'unit': fields.Integer(required=False,
-                           description='Product unit',
-                           attribute='product_unit')
+    'quantity': fields.Integer(required=False,
+                               description='Product quantity',
+                               attribute='product_quantity')
 })
 
 
@@ -82,7 +82,7 @@ class ProductListAPI(Resource):
                               product_availability=request.json['availability'],
                               product_discount=request.json['discount'],
                               product_price=request.json['price'],
-                              product_unit=request.json['unit'])
+                              product_quantity=request.json['quantity'])
         db.session.add(new_product)
         try:
             db.session.commit()
@@ -104,7 +104,7 @@ class ProductAPI(Resource):
         """
         Get product data
         """
-        product = Product.query.filter_by(product_code=code).first()
+        product = Product.query.filter_by(product_code_uuid=code).first()
         if product is None:
             raise NotFound()
         return product, 200
@@ -116,7 +116,7 @@ class ProductAPI(Resource):
         """
         Delete a product
         """
-        product = Product.query.filter_by(product_code=code).first()
+        product = Product.query.filter_by(product_code_uuid=code).first()
         if product is None:
             raise NotFound()
         db.session.delete(product)
@@ -130,7 +130,7 @@ class ProductAPI(Resource):
         """
         Delete a product
         """
-        product = Product.query.filter_by(product_code=code).first()
+        product = Product.query.filter_by(product_code_uuid=code).first()
         if product is None:
             raise NotFound()
         db.session.delete(product)
@@ -146,7 +146,7 @@ class ProductAPI(Resource):
         """
         Edit product data.
         """
-        product = Product.query.filter_by(product_code=code).first()
+        product = Product.query.filter_by(product_code_uuid=code).first()
         if product is None:
             raise NotFound()
         if 'name' in request.json.keys():
@@ -155,8 +155,8 @@ class ProductAPI(Resource):
             product.product_availability = request.json['availability']
         if 'price' in request.json.keys():
             product.product_price = request.json['price']
-        if 'unit' in request.json.keys():
-            product.product_unit = request.json['unit']
+        if 'quantity' in request.json.keys():
+            product.product_quantity = request.json['quantity']
         if 'discount' in request.json.keys():
             product.product_discount = request.json['discount']
         try:

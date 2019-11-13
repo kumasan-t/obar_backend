@@ -34,7 +34,7 @@ class OperationAPI(Resource):
 
         customer = Customer.query.filter_by(customer_mail_address=request.json['customer_mail_address']).first()
         # FIXME: Purchase number is a placeholder, need to change the field to UUID
-        purchase = Purchase(purchase_number=0, purchase_date=dt.now(),
+        purchase = Purchase(purchase_date=dt.now(),
                             purchase_customer_mail_address=customer.customer_mail_address)
 
         if customer is None:
@@ -58,20 +58,19 @@ class OperationAPI(Resource):
         # adds the purchase to session
         db.session.add(purchase)
         for details in request.json['purchase_details']:
-            product = Product.query.filter_by(product_code=details['product_code']).first()
+            product = Product.query.filter_by(product_code_uuid=details['product_code']).first()
             if not product.product_availability:
                 raise UnprocessableEntity('Unavailable product selected')
-            if product.product_unit <= 0:
+            if product.product_quantity <= 0:
                 raise UnprocessableEntity('Product out of stock')
-            if product.product_unit < details['purchase_quantity']:
+            if product.product_quantity < details['purchase_quantity']:
                 raise UnprocessableEntity('Too much quantity requested')
             # update the product quantity
-            product.product_unit = product.product_unit - details['purchase_quantity']
+            product.product_quantity = product.product_quantity - details['purchase_quantity']
             # create a new association object between a purchase and a product
             # FIXME: PurchaseItem number is a placeholder, need to change its model
-            purchase_item = PurchaseItem(purchase_item_product_code=product.product_code,
-                                         purchase_item_number=1,
-                                         purchase_item_purchase_number=purchase.purchase_number,
+            purchase_item = PurchaseItem(purchase_item_product_code_uuid=product.product_code_uuid,
+                                         purchase_item_purchase_code_uuid=purchase.purchase_code_uuid,
                                          purchase_item_quantity=details['purchase_quantity'])
             db.session.add(purchase_item)
         db.session.commit()

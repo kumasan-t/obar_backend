@@ -78,8 +78,8 @@ class CustomerListAPI(Resource):
         """
         new_customer = Customer(customer_mail_address=request.json['mail_address'],
                                 customer_first_name=request.json['first_name'],
-                                customer_last_name=request.json['last_name'])
-        new_customer.set_password(request.json['pin'])
+                                customer_last_name=request.json['last_name'],
+                                customer_pin_hash=request.json['pin'])
         print(new_customer.customer_pin_hash)
         db.session.add(new_customer)
         try:

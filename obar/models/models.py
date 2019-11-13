@@ -5,20 +5,30 @@ db = SQLAlchemy()
 
 
 class Purchase(db.Model):
-
+    """Purchase model
+    Represents the purchase from a customer.
+    """
     __tablename__ = 'purchase'
 
-    purchase_number = db.Column(db.Integer(), primary_key=True, autoincrement=True)
+    purchase_code_uuid = db.Column(db.String(), primary_key=True)
     purchase_date = db.Column(db.Date())
     purchase_customer_mail_address = db.Column(db.String(), db.ForeignKey('customer.customer_mail_address'))
-    purchase_item = db.relationship('PurchaseItem')
+    purchase_item = db.relationship('PurchaseItem', backref='Purchase')
 
     def __repr__(self):
         return '<Purchase {}{} >'.format(self.purchase_number, self.purchase_customer_mail_address)
 
+    def __init__(self, purchase_date, purchase_customer_mail_address):
+        # Generates a UUID for the Purchase
+        self.purchase_code_uuid = uuid.uuid4().hex
+        self.purchase_customer_mail_address = purchase_customer_mail_address
+        self.purchase_date = purchase_date
+
 
 class Customer(db.Model):
-
+    """Customer model
+    Represents the customer.
+    """
     __tablename__ = 'customer'
 
     customer_mail_address = db.Column(db.String(), primary_key=True)
@@ -27,10 +37,18 @@ class Customer(db.Model):
     customer_last_name = db.Column(db.String())
     purchase = db.relationship('Purchase', backref='Customer')
 
-    def set_password(self, password):
-        self.customer_pin_hash = generate_password_hash(password)
+    def __init__(self, customer_mail_address, customer_pin_hash, customer_first_name, customer_last_name):
+        self.customer_mail_address = customer_mail_address
+        self.customer_pin_hash = generate_password_hash(customer_pin_hash)
+        self.customer_last_name = customer_last_name
+        self.customer_first_name = customer_first_name
 
     def check_password(self, password):
+        """Hash comparator
+        Compares password hash in db with the password (hashed) provided by
+        the client
+        :return boolean: True if password matches, False otherwise
+        """
         return check_password_hash(self.password_hash, password)
 
     def __repr__(self):
@@ -45,31 +63,41 @@ class Product(db.Model):
     __tablename__ = 'product'
 
     product_name = db.Column(db.String(), unique=True)
-    product_code = db.Column(db.String(), primary_key=True)
+    product_code_uuid = db.Column(db.String(), primary_key=True)
     product_availability = db.Column(db.Boolean())
     product_price = db.Column(db.Float())
-    product_unit = db.Column(db.Integer())
+    product_quantity = db.Column(db.Integer())
     product_discount = db.Column(db.Float(), default=0)
     purchaseItem = db.relationship('PurchaseItem', backref='Product')
 
-    def __init__(self, product_name, product_availability, product_discount, product_price, product_unit):
+    def __init__(self, product_name, product_availability, product_discount, product_price, product_quantity):
+        # Generates a UUID for the the product
+        self.product_code_uuid = uuid.uuid4().hex
         self.product_name = product_name
         self.product_availability = product_availability
         self.product_price = product_price
-        self.product_unit = product_unit
+        self.product_quantity = product_quantity
         self.product_discount = product_discount
-        self.product_code = uuid.uuid4().hex
 
     def __repr__(self):
         return '<Product {} {}>'.format(self.product_name, self.product_code)
 
 
 class PurchaseItem(db.Model):
+
     __tablename__ = 'purchase_item'
-    purchase_item_number = db.Column(db.Integer(), primary_key=True)
+
+    purchase_item_uuid = db.Column(db.String(), primary_key=True)
     purchase_item_quantity = db.Column(db.Integer())
-    purchase_item_product_code = db.Column(db.String(), db.ForeignKey('product.product_code'))
-    purchase_item_purchase_number = db.Column(db.Integer(), db.ForeignKey('purchase.purchase_number'))
+    purchase_item_product_code_uuid = db.Column(db.String(), db.ForeignKey('product.product_code_uuid'))
+    purchase_item_purchase_code_uuid = db.Column(db.String(), db.ForeignKey('purchase.purchase_code_uuid'))
+
+    def __init__(self, purchase_item_quantity, purchase_item_product_code_uuid, purchase_item_purchase_code_uuid):
+        # Generates a UUID for the Purchase Item
+        self.purchase_item_uuid = uuid.uuid4().hex
+        self.purchase_item_purchase_code_uuid = purchase_item_purchase_code_uuid
+        self.purchase_item_product_code_uuid = purchase_item_product_code_uuid
+        self.purchase_item_quantity = purchase_item_quantity
 
     def __repr__(self):
         return '<PurchaseItem {}{}>'.format(self.purchase_item_number, self.purchase_purchase_item)
