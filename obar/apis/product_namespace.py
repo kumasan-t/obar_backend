@@ -137,6 +137,7 @@ class ProductAPI(Resource):
         db.session.commit()
         return '', 204
 
+    # TODO: redefine models so that an admin user can modify each of this field
     @product_ns.doc('put_product')
     @product_ns.response(204, 'Updated succesfully')
     @product_ns.response(404, 'product not found')
@@ -164,3 +165,5 @@ class ProductAPI(Resource):
         except IntegrityError:
             raise Conflict('Attribute must be unique')
         return '', 204
+
+# TODO: must add image resource to product /code/img and define CRUD for it
