@@ -101,7 +101,7 @@ class PurchaseItem(db.Model):
         self.purchase_item_quantity = purchase_item_quantity
 
     def __repr__(self):
-        return '<PurchaseItem {}{}>'.format(self.purchase_item_number, self.purchase_purchase_item)
+        return '<PurchaseItem {}>'.format(self.purchase_item_uuid)
 
 
 class ProductImage(db.Model):
