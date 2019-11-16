@@ -58,6 +58,7 @@ class Customer(db.Model):
 # TODO: resolve product name conflict in case of upper and lower cases
 # TODO: consider adding slugify to product name for name standardization
 # For slugify refer to this https://github.com/un33k/python-slugify
+# FIXME: correct product code in __repr__()
 class Product(db.Model):
 
     __tablename__ = 'product'
@@ -69,6 +70,7 @@ class Product(db.Model):
     product_quantity = db.Column(db.Integer())
     product_discount = db.Column(db.Float(), default=0)
     purchaseItem = db.relationship('PurchaseItem', backref='Product')
+    productImage = db.relationship('ProductImage', backref='Product', uselist=False)
 
     def __init__(self, product_name, product_availability, product_discount, product_price, product_quantity):
         # Generates a UUID for the the product
@@ -101,3 +103,18 @@ class PurchaseItem(db.Model):
 
     def __repr__(self):
         return '<PurchaseItem {}{}>'.format(self.purchase_item_number, self.purchase_purchase_item)
+
+
+class ProductImage(db.Model):
+    """Product Image model
+    Represents the relative path of images stored for each product
+    """
+    __tablename__ = 'product_image'
+
+    product_image_binary = db.Column(db.LargeBinary())
+    product_image_filename = db.Column(db.String(), primary_key=True)
+    product_image_product_code_uuid = db.Column(db.String(), db.ForeignKey('product.product_code_uuid'))
+    product = db.relationship('Product', backref='ProductImage')
+
+    def __repr__(self):
+        return '<ProductImage {}>'.format(self.product_image_filename)

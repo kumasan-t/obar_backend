@@ -8,3 +8,4 @@ from .models import Customer
 from .models import Purchase
 from .models import PurchaseItem
 from .models import Product
+from .models import ProductImage
