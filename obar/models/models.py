@@ -58,7 +58,6 @@ class Customer(db.Model):
 # TODO: resolve product name conflict in case of upper and lower cases
 # TODO: consider adding slugify to product name for name standardization
 # For slugify refer to this https://github.com/un33k/python-slugify
-# FIXME: correct product code in __repr__()
 class Product(db.Model):
 
     __tablename__ = 'product'
@@ -82,7 +81,7 @@ class Product(db.Model):
         self.product_discount = product_discount
 
     def __repr__(self):
-        return '<Product {} {}>'.format(self.product_name, self.product_code)
+        return '<Product {} {}>'.format(self.product_name, self.product_code_uuid)
 
 
 class PurchaseItem(db.Model):
