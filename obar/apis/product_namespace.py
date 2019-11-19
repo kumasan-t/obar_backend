@@ -2,12 +2,14 @@ from werkzeug.exceptions import InternalServerError, Conflict, NotFound
 from sqlalchemy.exc import OperationalError, IntegrityError
 from flask import request
 from flask_restplus import Namespace, Resource, fields
-from obar.models import Product
+from obar.models import Product, ProductImage
 from obar import db
+from .marshal.fields import product_image_fields
+import base64
 
 product_ns = Namespace('product', description='Product related operations')
 
-# TODO: redefine product models according to API input and output requirements
+# TODO: move models to fields.py
 product_model = product_ns.model('Product', {
     'name': fields.String(requred=True,
                           description='Product name',
@@ -50,6 +52,8 @@ product_put_model = product_ns.model('Product Update', {
                                description='Product quantity',
                                attribute='product_quantity')
 })
+
+product_image_model = product_ns.model('Product Image', product_image_fields)
 
 
 @product_ns.route('/')
@@ -166,4 +170,86 @@ class ProductAPI(Resource):
             raise Conflict('Attribute must be unique')
         return '', 204
 
-# TODO: must add image resource to product /code/img and define CRUD for it
+
+@product_ns.route('/<string:code>/img')
+class ProductImageAPI(Resource):
+
+    @product_ns.doc('get_product_image')
+    @product_ns.response(200, 'Success')
+    @product_ns.response(404, 'Product not Found')
+    @product_ns.response(404, 'Image not Found')
+    @product_ns.marshal_with(product_image_model)
+    def get(self, code):
+        """
+        Get product image data
+        """
+        product = Product.query.filter_by(product_code_uuid=code).first()
+        if product is None:
+            raise NotFound('Product not found')
+        image = product.productImage
+        if image is None:
+            raise NotFound('Image not found')
+        response = {
+            'filename': image.product_image_filename,
+            'file_base64': base64.b64encode(image.product_image_binary).decode('ascii')
+        }
+        return response, 200
+
+    @product_ns.doc('post_product_image')
+    @product_ns.response(201, 'Resource created')
+    @product_ns.expect(product_image_model, validate=True)
+    def post(self, code):
+        """
+        Post new product image data
+        """
+        product = Product.query.filter_by(product_code_uuid=code).first()
+        if product is None:
+            raise NotFound()
+        image = ProductImage(product_image_product_code_uuid=code,
+                             product_image_filename=request.json['filename'],
+                             product_image_binary=base64.b64decode(request.json['file_base64']))
+        db.session.add(image)
+        db.session.commit()
+
+        return '', 201
+
+    @product_ns.doc('put_product_image')
+    @product_ns.response(204, 'Updated successfully')
+    @product_ns.response(404, 'Product not found')
+    @product_ns.response(404, 'Image not found')
+    @product_ns.expect(product_image_model)
+    def put(self, code):
+        """
+        Update product image
+        """
+        product = Product.query.filter_by(product_code_uuid=code).first()
+        if product is None:
+            raise NotFound('Product not found')
+        image = product.productImage
+        if image is None:
+            raise NotFound('Image not found')
+
+        if 'filename' in request.json:
+            image.product_image_filename = request.json['filename']
+        if 'file_base64' in request.json:
+            image.product_image_binary = base64.b64decode(request.json['file_base64'])
+
+        db.session.commit()
+        return '', 204
+
+    @product_ns.doc('delete_product_image')
+    @product_ns.response(204, 'Success')
+    @product_ns.response(404, 'Product not found')
+    @product_ns.response(404, 'Image not found')
+    def delete(self, code):
+        product = Product.query.filter_by(product_code_uuid=code).first()
+        if product is None:
+            raise NotFound('%s not found')
+        image = product.productImage
+        if image is None:
+            raise NotFound('%s not found')
+
+        db.session.delete(image)
+        db.session.commit()
+
+        return '', 204
