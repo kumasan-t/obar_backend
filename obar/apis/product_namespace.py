@@ -127,20 +127,6 @@ class ProductAPI(Resource):
         db.session.commit()
         return '', 204
 
-    @product_ns.doc('delete_product')
-    @product_ns.response(204, 'Success')
-    @product_ns.response(404, 'Product not found')
-    def delete(self, code):
-        """
-        Delete a product
-        """
-        product = Product.query.filter_by(product_code_uuid=code).first()
-        if product is None:
-            raise NotFound()
-        db.session.delete(product)
-        db.session.commit()
-        return '', 204
-
     # TODO: redefine models so that an admin user can modify each of this field
     @product_ns.doc('put_product')
     @product_ns.response(204, 'Updated succesfully')
