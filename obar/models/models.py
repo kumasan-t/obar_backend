@@ -85,11 +85,14 @@ class Product(db.Model):
 
 
 class PurchaseItem(db.Model):
-
+    """Purchase Item model
+    Represents an item of a purchase
+    """
     __tablename__ = 'purchase_item'
 
     purchase_item_uuid = db.Column(db.String(), primary_key=True)
     purchase_item_quantity = db.Column(db.Integer())
+    purchase_item_price = db.Column(db.Float())
     purchase_item_product_code_uuid = db.Column(db.String(), db.ForeignKey('product.product_code_uuid'))
     purchase_item_purchase_code_uuid = db.Column(db.String(), db.ForeignKey('purchase.purchase_code_uuid'))
 
@@ -99,6 +102,8 @@ class PurchaseItem(db.Model):
         self.purchase_item_purchase_code_uuid = purchase_item_purchase_code_uuid
         self.purchase_item_product_code_uuid = purchase_item_product_code_uuid
         self.purchase_item_quantity = purchase_item_quantity
+        product = Product.query.filter_by(product_code_uuid=purchase_item_product_code_uuid).first()
+        self.purchase_item_price = (1 - product.product_discount) * product.product_price * purchase_item_quantity
 
     def __repr__(self):
         return '<PurchaseItem {}>'.format(self.purchase_item_uuid)
