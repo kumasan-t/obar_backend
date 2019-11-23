@@ -40,7 +40,7 @@ def create_app(test_config=None):
             cursor.close()
 
     # Import models to allow SQLAlchemy to create tables
-    from obar.models import Customer, Purchase, PurchaseItem, Product, ProductImage
+    from obar.models import Customer, Purchase, PurchaseItem, Product, ProductImage,BlacklistToken
 
     db.init_app(app)
     app.logger.info('Initialized database plug-in')
