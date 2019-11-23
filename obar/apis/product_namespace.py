@@ -228,6 +228,9 @@ class ProductImageAPI(Resource):
     @product_ns.response(404, 'Product not found')
     @product_ns.response(404, 'Image not found')
     def delete(self, code):
+        """
+        Delete product image
+        """
         product = Product.query.filter_by(product_code_uuid=code).first()
         if product is None:
             raise NotFound('%s not found')
