@@ -1,7 +1,7 @@
 from flask import request, current_app
 from flask_restplus import Namespace, Resource, fields, abort
 from sqlalchemy.exc import OperationalError, IntegrityError
-from werkzeug.exceptions import Conflict, InternalServerError, NotFound
+from werkzeug.exceptions import Conflict, InternalServerError, NotFound, UnprocessableEntity
 from obar.models import Customer
 from obar import db
 
@@ -16,7 +16,7 @@ customer_input_model = customer_ns.model('Customer Input', {
     'mail_address': fields.String(required=True,
                                   description='Customer mail address',
                                   attribute='customer_mail_address'),
-    'pin': fields.String(required=True,
+    'pin': fields.Integer(required=True,
                          description='Customer PIN',
                          attribute='customer_pin_hash'),
     'first_name': fields.String(required=True,
@@ -76,17 +76,21 @@ class CustomerListAPI(Resource):
         """
         Creates a new customer.
         """
+        if not (0 <= request.json["pin"] <= 99999):
+            raise UnprocessableEntity("The PIN must be of 5 digits")
         new_customer = Customer(customer_mail_address=request.json['mail_address'],
                                 customer_first_name=request.json['first_name'],
                                 customer_last_name=request.json['last_name'],
-                                customer_pin_hash=request.json['pin'])
+                                customer_pin_hash=str(request.json['pin']))
         print(new_customer.customer_pin_hash)
         db.session.add(new_customer)
         try:
             db.session.commit()
         except OperationalError:
+            db.session.remove()
             raise InternalServerError(description='Customer table does not exists.')
         except IntegrityError:
+            db.session.remove()
             raise Conflict(description=new_customer.__repr__() + ' already exists')
         current_app.logger.info(new_customer.__repr__() + ' added to database.')
         return {'message': 'Resource created'}, 201
