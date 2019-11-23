@@ -59,10 +59,13 @@ class OperationAPI(Resource):
         for details in request.json['purchase_details']:
             product = Product.query.filter_by(product_code_uuid=details['product_code']).first()
             if not product.product_availability:
+                db.session.remove()
                 raise UnprocessableEntity('Unavailable product selected')
             if product.product_quantity <= 0:
+                db.session.remove()
                 raise UnprocessableEntity('Product out of stock')
             if product.product_quantity < details['purchase_quantity']:
+                db.session.remove()
                 raise UnprocessableEntity('Too much quantity requested')
             # update the product quantity
             product.product_quantity = product.product_quantity - details['purchase_quantity']
