@@ -1,8 +1,13 @@
 import datetime
+import jwt
 import uuid
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import check_password_hash, generate_password_hash
+
 db = SQLAlchemy()
+
+# FIXME: This key should be put either in Config file or in some environment variable
+key = 'DUMMY_SECRET_KEY'
 
 
 class Purchase(db.Model):
@@ -55,12 +60,46 @@ class Customer(db.Model):
     def __repr__(self):
         return '<Customer %r>' % self.customer_mail_address
 
+    def encode_auth_token(self):
+        try:
+            payload = {
+                'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1, seconds=5),
+                'iat': datetime.datetime.utcnow(),
+                'sub': self.customer_mail_address
+            }
+
+            return jwt.encode(
+                payload,
+                key,
+                algorithm='HS256'
+            )
+        except Exception as e:
+            return e
+
+    @staticmethod
+    def decode_auth_token(auth_token):
+        """
+        Decodes the auth token
+        :param auth_token:
+        :return: integer|string
+        """
+        try:
+            payload = jwt.decode(auth_token, key, algorithms='HS256')
+            is_blacklist_token = BlacklistToken.check_blacklist(auth_token)
+            if is_blacklist_token:
+                return 'Token blacklisted. Please log in again'
+            else:
+                return payload['sub']
+        except jwt.ExpiredSignatureError:
+            return 'Signature expired. Please log in again'
+        except jwt.InvalidTokenError:
+            return 'Invalid token. Please log in again'
+
 
 # TODO: resolve product name conflict in case of upper and lower cases
 # TODO: consider adding slugify to product name for name standardization
 # For slugify refer to this https://github.com/un33k/python-slugify
 class Product(db.Model):
-
     __tablename__ = 'product'
 
     product_name = db.Column(db.String(), unique=True)
