@@ -51,7 +51,7 @@ def create_app(test_config=None):
     api = Api(
         title='OBar',
         version='1.0',
-        description='API documentation for OBar web-application',
+        description='API documentation for OBar web-application <style>.models {display: none !important}</style>',
         # All API metadatas
     )
 
