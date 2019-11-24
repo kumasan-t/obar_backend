@@ -49,13 +49,13 @@ class Customer(db.Model):
         self.customer_last_name = customer_last_name
         self.customer_first_name = customer_first_name
 
-    def check_password(self, password):
+    def check_password(self, pin):
         """Hash comparator
         Compares password hash in db with the password (hashed) provided by
         the client
         :return boolean: True if password matches, False otherwise
         """
-        return check_password_hash(self.password_hash, password)
+        return check_password_hash(self.customer_pin_hash, pin)
 
     def __repr__(self):
         return '<Customer %r>' % self.customer_mail_address
@@ -87,13 +87,25 @@ class Customer(db.Model):
             payload = jwt.decode(auth_token, key, algorithms='HS256')
             is_blacklist_token = BlacklistToken.check_blacklist(auth_token)
             if is_blacklist_token:
-                return 'Token blacklisted. Please log in again'
+                return {
+                    'status': 'fail',
+                    'message': 'Token blacklisted. Please log in again'
+                }
             else:
-                return payload['sub']
+                return {
+                    'status': 'success',
+                    'customer': payload['sub']
+                }
         except jwt.ExpiredSignatureError:
-            return 'Signature expired. Please log in again'
+            return {
+                'status': 'fail',
+                'message': 'Signature expired. Please log in again'
+            }
         except jwt.InvalidTokenError:
-            return 'Invalid token. Please log in again'
+            return {
+                'status': 'fail',
+                'message': 'Invalid token. Please log in again'
+            }
 
 
 # TODO: resolve product name conflict in case of upper and lower cases
