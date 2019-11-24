@@ -4,9 +4,17 @@ from flask import request
 from obar.models import db
 from werkzeug.exceptions import NotFound, UnprocessableEntity
 from datetime import datetime as dt
+from .decorator.auth_decorator import customer_token_required
 
+authorizations = {
+    "JWT": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "Authorization"
+    }
+}
 
-operation_ns = Namespace('operation', description='Common operations')
+operation_ns = Namespace('operation', description='Common operations', authorizations=authorizations)
 
 purchase_details_model = operation_ns.model('Product details', {
     'product_code': fields.String(required=True,
@@ -25,13 +33,13 @@ perform_purchase_model = operation_ns.model('Purchase Order', {
 @operation_ns.route('/purchaseProducts')
 class OperationAPI(Resource):
 
-    @operation_ns.doc('post_purchase_products')
+    @operation_ns.doc('post_purchase_products', security='JWT')
     @operation_ns.expect(perform_purchase_model, validate=True)
+    @customer_token_required
     def post(self):
         """
         Performs a purchase operation
         """
-
         customer = Customer.query.filter_by(customer_mail_address=request.json['customer_mail_address']).first()
         purchase = Purchase(purchase_date=dt.now(),
                             purchase_customer_mail_address=customer.customer_mail_address)
