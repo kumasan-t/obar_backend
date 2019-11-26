@@ -41,13 +41,15 @@ class Customer(db.Model):
     customer_pin_hash = db.Column(db.String())  # has to be hashed
     customer_first_name = db.Column(db.String())
     customer_last_name = db.Column(db.String())
+    customer_is_admin = db.Column(db.Boolean(), default=False)
     purchase = db.relationship('Purchase', backref='Customer')
 
-    def __init__(self, customer_mail_address, customer_pin_hash, customer_first_name, customer_last_name):
+    def __init__(self, customer_mail_address, customer_pin_hash, customer_first_name, customer_last_name, customer_is_admin):
         self.customer_mail_address = customer_mail_address
         self.customer_pin_hash = generate_password_hash(customer_pin_hash)
         self.customer_last_name = customer_last_name
         self.customer_first_name = customer_first_name
+        self.customer_is_admin = customer_is_admin
 
     def check_password(self, pin):
         """Hash comparator
@@ -65,7 +67,8 @@ class Customer(db.Model):
             payload = {
                 'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1, seconds=5),
                 'iat': datetime.datetime.utcnow(),
-                'sub': self.customer_mail_address
+                'sub': self.customer_mail_address,
+                'admin': self.customer_is_admin
             }
 
             return jwt.encode(
@@ -94,7 +97,8 @@ class Customer(db.Model):
             else:
                 return {
                     'status': 'success',
-                    'customer': payload['sub']
+                    'customer': payload['sub'],
+                    'admin': payload['admin']
                 }
         except jwt.ExpiredSignatureError:
             return {
