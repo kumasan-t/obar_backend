@@ -44,12 +44,11 @@ class Customer(db.Model):
     customer_is_admin = db.Column(db.Boolean(), default=False)
     purchase = db.relationship('Purchase', backref='Customer')
 
-    def __init__(self, customer_mail_address, customer_pin_hash, customer_first_name, customer_last_name, customer_is_admin):
+    def __init__(self, customer_mail_address, customer_pin_hash, customer_first_name, customer_last_name):
         self.customer_mail_address = customer_mail_address
         self.customer_pin_hash = generate_password_hash(customer_pin_hash)
         self.customer_last_name = customer_last_name
         self.customer_first_name = customer_first_name
-        self.customer_is_admin = customer_is_admin
 
     def check_password(self, pin):
         """Hash comparator

@@ -3,10 +3,19 @@ from flask_restplus import Namespace, Resource, fields, abort
 from sqlalchemy.exc import OperationalError, IntegrityError
 from werkzeug.exceptions import Conflict, InternalServerError, NotFound, UnprocessableEntity
 from obar.models import Customer
+from .decorator import admin_token_required
 from obar import db
 
 
-customer_ns = Namespace('customer', description='Customer related operations')
+authorizations = {
+    "JWT": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "Authorization"
+    }
+}
+
+customer_ns = Namespace('customer', description='Customer related operations', authorizations=authorizations)
 
 # Models defined for marshaling of input requests and responses.
 # TODO: create a custom Email field that validates email addresses
@@ -52,7 +61,8 @@ customer_put_model = customer_ns.model('Customer Update', {
 @customer_ns.route('/')
 class CustomerListAPI(Resource):
 
-    @customer_ns.doc('get_customer_list')
+    @admin_token_required
+    @customer_ns.doc('get_customer_list', security='JWT')
     @customer_ns.response(200, 'Returns a list of customers')
     @customer_ns.response(500, 'Internal server error')
     @customer_ns.marshal_list_with(customer_output_model)
@@ -67,7 +77,8 @@ class CustomerListAPI(Resource):
             raise InternalServerError(description='Customer table does not exists.')
         return customer_list, 200
 
-    @customer_ns.doc('post_customer')
+    @admin_token_required
+    @customer_ns.doc('post_customer', security='JWT')
     @customer_ns.response(201, 'Resource created')
     @customer_ns.response(409, 'The resource already exists')
     @customer_ns.response(500, 'Internal server error')
@@ -99,7 +110,8 @@ class CustomerListAPI(Resource):
 @customer_ns.route('/<string:id>')
 class CustomerAPI(Resource):
 
-    @customer_ns.doc('get_customer')
+    @admin_token_required
+    @customer_ns.doc('get_customer', security='JWT')
     @customer_ns.marshal_with(customer_output_model)
     @customer_ns.response(200, 'Success')
     @customer_ns.response(404, 'Customer not found')
@@ -112,7 +124,8 @@ class CustomerAPI(Resource):
             raise NotFound()
         return customer, 200
 
-    @customer_ns.doc('del_customer')
+    @admin_token_required
+    @customer_ns.doc('del_customer', security='JWT')
     @customer_ns.response(204, description='No content')
     @customer_ns.response(404, 'Customer not found')
     def delete(self, id):
@@ -126,7 +139,8 @@ class CustomerAPI(Resource):
         db.session.commit()
         return '', 204
 
-    @customer_ns.doc('put_customer')
+    @admin_token_required
+    @customer_ns.doc('put_customer', security='JWT')
     @customer_ns.response(204, 'Updated succesfully')
     @customer_ns.response(404, 'Customer not found')
     @customer_ns.expect(customer_put_model, validate=True)

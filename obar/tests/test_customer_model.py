@@ -14,7 +14,7 @@ class TestUserAuth(TestCase):
         app.config['TESTING'] = self.TESTING
         # If unable to open the db file, check that the working directory is correct s.t. it must be the same of your
         # application: /path/to/application/obar_backend/
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(os.getcwd(), r'obar\obar_database.db')
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(os.getcwd(), r'obar\tests\test.db')
         app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
         db.init_app(app)
@@ -52,7 +52,11 @@ class TestUserAuth(TestCase):
         db.session.commit()
         auth_token = user.encode_auth_token()
         self.assertTrue(isinstance(auth_token, bytes))
-        self.assertTrue(Customer.decode_auth_token(auth_token.decode("utf-8")) == user.customer_mail_address)
+        resp = Customer.decode_auth_token(auth_token.decode("utf-8"))
+        if resp['status'] == 'success':
+            self.assertTrue(resp['customer'] == user.customer_mail_address)
+        else:
+            assert False
 
 
 if __name__ == '__main__':
