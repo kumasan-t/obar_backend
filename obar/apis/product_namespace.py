@@ -5,9 +5,18 @@ from flask_restplus import Namespace, Resource, fields
 from obar.models import Product, ProductImage
 from obar import db
 from .marshal.fields import product_image_fields
+from .decorator import admin_token_required
 import base64
 
-product_ns = Namespace('product', description='Product related operations')
+authorizations = {
+    "JWT": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "Authorization"
+    }
+}
+
+product_ns = Namespace('product', description='Product related operations', authorizations=authorizations)
 
 # TODO: move models to fields.py
 product_model = product_ns.model('Product', {
@@ -59,10 +68,10 @@ product_image_model = product_ns.model('Product Image', product_image_fields)
 @product_ns.route('/')
 class ProductListAPI(Resource):
 
-    @product_ns.marshal_list_with(product_output_model)
     @product_ns.response(200, 'Return a list of products')
     @product_ns.response(500, 'Internal server error')
     @product_ns.doc('get_product_list')
+    @product_ns.marshal_list_with(product_output_model)
     def get(self):
         """
         Returns a list of Product
@@ -73,7 +82,8 @@ class ProductListAPI(Resource):
             raise InternalServerError(description='Product table does not exists.')
         return product_list, 200
 
-    @product_ns.doc('post_product')
+    @admin_token_required
+    @product_ns.doc('post_product', security='JWT')
     @product_ns.response(201, 'Resource created')
     @product_ns.response(500, 'Internal server error')
     @product_ns.response(409, 'Resource already exists')
@@ -113,7 +123,8 @@ class ProductAPI(Resource):
             raise NotFound()
         return product, 200
 
-    @product_ns.doc('delete_product')
+    @admin_token_required
+    @product_ns.doc('delete_product', security='JWT')
     @product_ns.response(204, 'Success')
     @product_ns.response(404, 'Product not found')
     def delete(self, code):
@@ -128,7 +139,8 @@ class ProductAPI(Resource):
         return '', 204
 
     # TODO: redefine models so that an admin user can modify each of this field
-    @product_ns.doc('put_product')
+    @admin_token_required
+    @product_ns.doc('put_product', security='JWT')
     @product_ns.response(204, 'Updated succesfully')
     @product_ns.response(404, 'product not found')
     @product_ns.response(409, 'Conflict in product resources')
@@ -181,7 +193,8 @@ class ProductImageAPI(Resource):
         }
         return response, 200
 
-    @product_ns.doc('post_product_image')
+    @admin_token_required
+    @product_ns.doc('post_product_image', security='JWT')
     @product_ns.response(201, 'Resource created')
     @product_ns.expect(product_image_model, validate=True)
     def post(self, code):
@@ -199,7 +212,8 @@ class ProductImageAPI(Resource):
 
         return '', 201
 
-    @product_ns.doc('put_product_image')
+    @admin_token_required
+    @product_ns.doc('put_product_image', security='JWT')
     @product_ns.response(204, 'Updated successfully')
     @product_ns.response(404, 'Product not found')
     @product_ns.response(404, 'Image not found')
@@ -223,7 +237,8 @@ class ProductImageAPI(Resource):
         db.session.commit()
         return '', 204
 
-    @product_ns.doc('delete_product_image')
+    @admin_token_required
+    @product_ns.doc('delete_product_image', security='JWT')
     @product_ns.response(204, 'Success')
     @product_ns.response(404, 'Product not found')
     @product_ns.response(404, 'Image not found')
