@@ -1,6 +1,6 @@
 from flask_restplus import Namespace, Resource
 from flask import request
-from .service.auth_service import login_customer, logout_customer
+from .service.auth_service import login_customer, logout_customer, register_admin_customer
 from .marshal.fields import customer_login_fields
 
 auth_ns = Namespace('auth', description='authentication related operations')
@@ -26,3 +26,11 @@ class CustomerLogoutAPI(Resource):
         auth_header = request.headers.get('Authorization')
         print(auth_header)
         return logout_customer(data=auth_header)
+
+
+@auth_ns.route('/createAdminUser')
+class AdminUserAPI(Resource):
+
+    @auth_ns.doc('create_admin_user')
+    def post(self):
+        return register_admin_customer()

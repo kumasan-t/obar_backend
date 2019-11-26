@@ -1,4 +1,6 @@
-from obar.models import Customer
+from obar.models import Customer, db
+from sqlalchemy.exc import IntegrityError
+from werkzeug.exceptions import Conflict
 from .blacklist_service import save_token
 
 
@@ -44,3 +46,24 @@ def logout_customer(data):
             'message': 'Provide a valid auth token'
         }
         return response_object, 403
+
+
+def register_admin_customer():
+    admin = Customer(customer_mail_address='admin@test.com',
+                     customer_first_name='admin',
+                     customer_last_name='admin',
+                     customer_pin_hash='12345'
+                     )
+    admin.customer_is_admin = True
+    db.session.add(admin)
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.remove()
+        raise Conflict(description=admin.__repr__() + ' already exists')
+    response = {
+        'mail_address': admin.customer_mail_address,
+        'pin': 12345,
+        'message': 'Login to get an admin token'
+    }
+    return response, 200
