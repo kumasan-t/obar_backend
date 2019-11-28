@@ -70,6 +70,8 @@ class Customer(db.Model):
                 'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1, seconds=5),
                 'iat': datetime.datetime.utcnow(),
                 'sub': self.customer_mail_address,
+                'firstName': self.customer_first_name,
+                'lastName': self.customer_last_name,
                 'admin': self.customer_is_admin
             }
 
