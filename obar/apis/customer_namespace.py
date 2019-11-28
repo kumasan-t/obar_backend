@@ -1,9 +1,9 @@
 from flask import request, current_app
 from flask_restplus import Namespace, Resource, fields, abort
 from sqlalchemy.exc import OperationalError, IntegrityError
-from werkzeug.exceptions import Conflict, InternalServerError, NotFound, UnprocessableEntity
+from werkzeug.exceptions import Conflict, InternalServerError, NotFound, UnprocessableEntity, Unauthorized
 from obar.models import Customer
-from .decorator import admin_token_required
+from .decorator import admin_token_required, customer_token_required
 from obar import db
 
 
@@ -49,6 +49,9 @@ customer_output_model = customer_ns.model('Customer Output', {
 })
 
 customer_put_model = customer_ns.model('Customer Update', {
+    'pin': fields.Integer(required=False,
+                          description='Customer PIN',
+                          attribute='customer_pin_hash'),
     'first_name': fields.String(required=False,
                                 description='Customer first name',
                                 attribute='customer_first_name'),
@@ -110,7 +113,7 @@ class CustomerListAPI(Resource):
 @customer_ns.route('/<string:id>')
 class CustomerAPI(Resource):
 
-    @admin_token_required
+    @customer_token_required
     @customer_ns.doc('get_customer', security='JWT')
     @customer_ns.marshal_with(customer_output_model)
     @customer_ns.response(200, 'Success')
@@ -119,6 +122,10 @@ class CustomerAPI(Resource):
         """
         Get customer data.
         """
+        token = request.headers['Authorization']
+        data = Customer.decode_auth_token(token)
+        if not data['admin'] and data['customer'] != id:
+            raise Unauthorized()
         customer = Customer.query.filter_by(customer_mail_address=id).first()
         if customer is None:
             raise NotFound()
@@ -139,7 +146,7 @@ class CustomerAPI(Resource):
         db.session.commit()
         return '', 204
 
-    @admin_token_required
+    @customer_token_required
     @customer_ns.doc('put_customer', security='JWT')
     @customer_ns.response(204, 'Updated succesfully')
     @customer_ns.response(404, 'Customer not found')
@@ -148,9 +155,17 @@ class CustomerAPI(Resource):
         """
         Edit customer data.
         """
+        token = request.headers['Authorization']
+        data = Customer.decode_auth_token(token)
+        if not data['admin'] and data['customer'] != id:
+            raise Unauthorized()
         customer = Customer.query.filter_by(customer_mail_address=id).first()
         if customer is None:
             raise NotFound()
+        if 'pin' in request.json.keys():
+            if not (0 <= request.json["pin"] <= 99999):
+                raise UnprocessableEntity("The PIN must be 5 digits")
+            customer.set_password(str(request.json['pin']))
         if 'first_name' in request.json.keys():
             customer.customer_first_name = request.json['first_name']
         if 'last_name' in request.json.keys():

@@ -50,6 +50,9 @@ class Customer(db.Model):
         self.customer_last_name = customer_last_name
         self.customer_first_name = customer_first_name
 
+    def set_password(self, passwd):
+        self.customer_pin_hash = generate_password_hash(passwd)
+
     def check_password(self, pin):
         """Hash comparator
         Compares password hash in db with the password (hashed) provided by
