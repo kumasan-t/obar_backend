@@ -2,8 +2,17 @@ from flask_restplus import Namespace, Resource
 from flask import request
 from .service.auth_service import login_customer, logout_customer, register_admin_customer
 from .marshal.fields import customer_login_fields
+from .decorator import customer_token_required
 
-auth_ns = Namespace('auth', description='authentication related operations')
+authorizations = {
+    "JWT": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "Authorization"
+    }
+}
+
+auth_ns = Namespace('auth', description='authentication related operations', authorizations=authorizations)
 user_auth_model = auth_ns.model('Auth Details', customer_login_fields)
 
 
@@ -20,7 +29,8 @@ class CustomerLoginAPI(Resource):
 @auth_ns.route('/logout')
 class CustomerLogoutAPI(Resource):
 
-    @auth_ns.doc('customer_logout')
+    @customer_token_required
+    @auth_ns.doc('customer_logout', security='JWT')
     def post(self):
         # get auth token
         auth_header = request.headers.get('Authorization')
