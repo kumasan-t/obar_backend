@@ -1,11 +1,11 @@
 from flask import request, current_app
-from flask_restplus import Namespace, Resource, fields, abort
+from flask_restplus import Namespace, Resource, fields
 from sqlalchemy.exc import OperationalError, IntegrityError
 from werkzeug.exceptions import Conflict, InternalServerError, NotFound, UnprocessableEntity, Unauthorized
+
+from obar import db
 from obar.models import Customer
 from .decorator import admin_token_required, customer_token_required
-from obar import db
-
 
 authorizations = {
     "JWT": {
@@ -26,8 +26,8 @@ customer_input_model = customer_ns.model('Customer Input', {
                                   description='Customer mail address',
                                   attribute='customer_mail_address'),
     'pin': fields.Integer(required=True,
-                         description='Customer PIN',
-                         attribute='customer_pin_hash'),
+                          description='Customer PIN',
+                          attribute='customer_pin_hash'),
     'first_name': fields.String(required=True,
                                 description='Customer first name',
                                 attribute='customer_first_name'),
@@ -110,7 +110,7 @@ class CustomerListAPI(Resource):
         return {'message': 'Resource created'}, 201
 
 
-@customer_ns.route('/<string:id>')
+@customer_ns.route('/<string:mail_address>')
 class CustomerAPI(Resource):
 
     @customer_token_required
@@ -118,15 +118,15 @@ class CustomerAPI(Resource):
     @customer_ns.marshal_with(customer_output_model)
     @customer_ns.response(200, 'Success')
     @customer_ns.response(404, 'Customer not found')
-    def get(self, id):
+    def get(self, mail_address):
         """
         Get customer data.
         """
         token = request.headers['Authorization']
         data = Customer.decode_auth_token(token)
-        if not data['admin'] and data['customer'] != id:
+        if not data['admin'] and data['customer'] != mail_address:
             raise Unauthorized()
-        customer = Customer.query.filter_by(customer_mail_address=id).first()
+        customer = Customer.query.filter_by(customer_mail_address=mail_address).first()
         if customer is None:
             raise NotFound()
         return customer, 200
@@ -135,11 +135,11 @@ class CustomerAPI(Resource):
     @customer_ns.doc('del_customer', security='JWT')
     @customer_ns.response(204, description='No content')
     @customer_ns.response(404, 'Customer not found')
-    def delete(self, id):
+    def delete(self, mail_address):
         """
         Delete customer data.
         """
-        customer = Customer.query.filter_by(customer_mail_address=id).first()
+        customer = Customer.query.filter_by(customer_mail_address=mail_address).first()
         if customer is None:
             raise NotFound()
         db.session.delete(customer)
@@ -151,15 +151,15 @@ class CustomerAPI(Resource):
     @customer_ns.response(204, 'Updated succesfully')
     @customer_ns.response(404, 'Customer not found')
     @customer_ns.expect(customer_put_model, validate=True)
-    def put(self, id):
+    def put(self, mail_address):
         """
         Edit customer data.
         """
         token = request.headers['Authorization']
         data = Customer.decode_auth_token(token)
-        if not data['admin'] and data['customer'] != id:
+        if not data['admin'] and data['customer'] != mail_address:
             raise Unauthorized()
-        customer = Customer.query.filter_by(customer_mail_address=id).first()
+        customer = Customer.query.filter_by(customer_mail_address=mail_address).first()
         if customer is None:
             raise NotFound()
         if 'pin' in request.json.keys():
