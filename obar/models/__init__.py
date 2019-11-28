@@ -10,3 +10,4 @@ from .models import PurchaseItem
 from .models import Product
 from .models import ProductImage
 from .models import BlacklistToken
+from .models import Site

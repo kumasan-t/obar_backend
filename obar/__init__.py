@@ -7,7 +7,8 @@ from flask_restplus import Api
 from flask.logging import default_handler
 from sqlalchemy import event
 from sqlite3 import Connection as SQLite3Connection
-from obar.apis import customer_namespace, product_namespace, purchase_namespace, operation_namespace, auth_namespace
+from obar.apis import customer_namespace, product_namespace, purchase_namespace, \
+    operation_namespace, auth_namespace, site_namespace
 
 
 migrate = Migrate()
@@ -40,7 +41,7 @@ def create_app(test_config=None):
             cursor.close()
 
     # Import models to allow SQLAlchemy to create tables
-    from obar.models import Customer, Purchase, PurchaseItem, Product, ProductImage,BlacklistToken
+    from obar.models import Customer, Purchase, PurchaseItem, Product, ProductImage, BlacklistToken, Site
 
     db.init_app(app)
     app.logger.info('Initialized database plug-in')
@@ -58,6 +59,7 @@ def create_app(test_config=None):
     api.add_namespace(customer_namespace.customer_ns)
     api.add_namespace(product_namespace.product_ns)
     api.add_namespace(purchase_namespace.purchase_ns)
+    api.add_namespace(site_namespace.site_ns)
     api.add_namespace(operation_namespace.operation_ns)
     api.add_namespace(auth_namespace.auth_ns)
     api.init_app(app)

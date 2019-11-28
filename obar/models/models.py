@@ -126,10 +126,13 @@ class Product(db.Model):
     product_price = db.Column(db.Float())
     product_quantity = db.Column(db.Integer())
     product_discount = db.Column(db.Float(), default=0)
+    product_location_id = db.Column(db.Integer(), db.ForeignKey('site.site_id'))
     purchaseItem = db.relationship('PurchaseItem', backref='Product')
     productImage = db.relationship('ProductImage', backref='Product', uselist=False)
 
-    def __init__(self, product_name, product_availability, product_discount, product_price, product_quantity):
+    def __init__(self,
+                 product_name, product_availability, product_discount,
+                 product_price, product_quantity, product_location_id):
         # Generates a UUID for the the product
         self.product_code_uuid = uuid.uuid4().hex
         self.product_name = product_name
@@ -137,6 +140,7 @@ class Product(db.Model):
         self.product_price = product_price
         self.product_quantity = product_quantity
         self.product_discount = product_discount
+        self.product_location_id = product_location_id
 
     def __repr__(self):
         return '<Product {} {}>'.format(self.product_name, self.product_code_uuid)
@@ -205,3 +209,14 @@ class BlacklistToken(db.Model):
             return True
         else:
             return False
+
+
+class Site(db.Model):
+    """Site of an office
+    Represents a site
+    """
+    __tablename__ = 'site'
+
+    site_id = db.Column(db.Integer(), primary_key=True, autoincrement=True)
+    site_address = db.Column(db.String(50), unique=True, nullable=False)
+    product = db.relationship('Product', backref='Site')
