@@ -2,6 +2,7 @@ import os
 import logging
 from obar.models import db
 from flask import Flask
+from flask_cors import CORS
 from flask_migrate import Migrate
 from flask_restplus import Api
 from flask.logging import default_handler
@@ -43,6 +44,7 @@ def create_app(test_config=None):
     # Import models to allow SQLAlchemy to create tables
     from obar.models import Customer, Purchase, PurchaseItem, Product, ProductImage, BlacklistToken, Site
 
+    CORS(app)
     db.init_app(app)
     app.logger.info('Initialized database plug-in')
 
