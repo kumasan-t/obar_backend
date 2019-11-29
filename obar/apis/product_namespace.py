@@ -1,12 +1,14 @@
-from werkzeug.exceptions import InternalServerError, Conflict, NotFound
-from sqlalchemy.exc import OperationalError, IntegrityError
+import base64
+
 from flask import request
 from flask_restplus import Namespace, Resource, fields
-from obar.models import Product, ProductImage
+from sqlalchemy.exc import OperationalError, IntegrityError
+from werkzeug.exceptions import InternalServerError, NotFound, BadRequest
+
 from obar import db
-from .marshal.fields import product_image_fields
+from obar.models import Product, ProductImage
 from .decorator import admin_token_required
-import base64
+from .marshal.fields import product_image_fields, product_put_fields, product_post_fields
 
 authorizations = {
     "JWT": {
@@ -19,23 +21,7 @@ authorizations = {
 product_ns = Namespace('product', description='Product related operations', authorizations=authorizations)
 
 # TODO: move models to fields.py
-product_model = product_ns.model('Product', {
-    'name': fields.String(requred=True,
-                          description='Product name',
-                          attribute='product_name'),
-    'availability': fields.Boolean(required=True,
-                                   description='Product availability',
-                                   attribute='product_availability'),
-    'discount': fields.Float(required=True,
-                             description='Product discount',
-                             attribute='product_discount'),
-    'price': fields.Float(required=True,
-                          description='Product description',
-                          attribute='product_price'),
-    'quantity': fields.Integer(required=True,
-                               description='Product quantity',
-                               attribute='product_quantity')
-})
+product_model = product_ns.model('Product', product_post_fields)
 
 product_output_model = product_ns.inherit('Product Output', product_model, {
     'code': fields.String(required=True,
@@ -43,24 +29,7 @@ product_output_model = product_ns.inherit('Product Output', product_model, {
                           attribute='product_code_uuid')
 })
 
-
-product_put_model = product_ns.model('Product Update', {
-    'name': fields.String(requred=False,
-                          description='Product name',
-                          attribute='product_name'),
-    'availability': fields.Boolean(required=False,
-                                   description='Product availability',
-                                   attribute='product_availability'),
-    'discount': fields.Float(required=False,
-                             description='Product discount',
-                             attribute='product_discount'),
-    'price': fields.Float(required=False,
-                          description='Product description',
-                          attribute='product_price'),
-    'quantity': fields.Integer(required=False,
-                               description='Product quantity',
-                               attribute='product_quantity')
-})
+product_put_model = product_ns.model('Product Update', product_put_fields)
 
 product_image_model = product_ns.model('Product Image', product_image_fields)
 
@@ -96,14 +65,15 @@ class ProductListAPI(Resource):
                               product_availability=request.json['availability'],
                               product_discount=request.json['discount'],
                               product_price=request.json['price'],
-                              product_quantity=request.json['quantity'])
+                              product_quantity=request.json['quantity'],
+                              product_location_id=request.json['location_id'])
         db.session.add(new_product)
         try:
             db.session.commit()
         except OperationalError:
             raise InternalServerError(description='Product table does not exists.')
         except IntegrityError:
-            raise Conflict(description=new_product.__repr__() + ' already exists')
+            raise BadRequest('Causes may be: name not unique, non existent location ID')
         return {'message': 'Resource created'}, 201
 
 
@@ -162,10 +132,12 @@ class ProductAPI(Resource):
             product.product_quantity = request.json['quantity']
         if 'discount' in request.json.keys():
             product.product_discount = request.json['discount']
+        if 'location_id' in request.json.keys():
+            product.product_location_id = request.json['location_id']
         try:
             db.session.commit()
         except IntegrityError:
-            raise Conflict('Attribute must be unique')
+            raise BadRequest('Causes may be: name not unique, non existent location ID')
         return '', 204
 
 

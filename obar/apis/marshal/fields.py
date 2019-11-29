@@ -25,3 +25,45 @@ site_fields_post = {
     'address': fields.String(required=True,
                              description='Site address')
 }
+
+product_put_fields = {
+    'name': fields.String(requred=False,
+                          description='Product name',
+                          attribute='product_name'),
+    'availability': fields.Boolean(required=False,
+                                   description='Product availability',
+                                   attribute='product_availability'),
+    'discount': fields.Float(required=False,
+                             description='Product discount',
+                             attribute='product_discount'),
+    'price': fields.Float(required=False,
+                          description='Product description',
+                          attribute='product_price'),
+    'quantity': fields.Integer(required=False,
+                               description='Product quantity',
+                               attribute='product_quantity'),
+    'location_id': fields.Integer(required=False,
+                                  description='Product location',
+                                  attribute='product_location_id')
+}
+
+product_post_fields = {
+    'name': fields.String(requred=True,
+                          description='Product name',
+                          attribute='product_name'),
+    'availability': fields.Boolean(required=True,
+                                   description='Product availability',
+                                   attribute='product_availability'),
+    'discount': fields.Float(required=True,
+                             description='Product discount',
+                             attribute='product_discount'),
+    'price': fields.Float(required=True,
+                          description='Product description',
+                          attribute='product_price'),
+    'quantity': fields.Integer(required=True,
+                               description='Product quantity',
+                               attribute='product_quantity'),
+    'location_id': fields.Integer(required=True,
+                                  description='Product location',
+                                  attribute='product_location_id')
+}
