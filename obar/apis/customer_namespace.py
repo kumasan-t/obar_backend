@@ -64,7 +64,6 @@ customer_put_model = customer_ns.model('Customer Update', {
 @customer_ns.route('/')
 class CustomerListAPI(Resource):
 
-    @admin_token_required
     @customer_ns.doc('get_customer_list', security='JWT')
     @customer_ns.response(200, 'Returns a list of customers')
     @customer_ns.response(500, 'Internal server error')
