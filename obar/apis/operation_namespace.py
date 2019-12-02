@@ -6,6 +6,7 @@ from werkzeug.exceptions import NotFound, UnprocessableEntity
 
 from obar.models import Customer, Purchase, PurchaseItem, Product
 from obar.models import db
+from .service.operation_service import purchase_leaderboard
 from .decorator.auth_decorator import customer_token_required
 from .marshal.fields import purchase_item_fields, operation_purchase_leaderboard_fields
 
@@ -95,18 +96,11 @@ class OperationAPI(Resource):
 @operation_ns.route('/purchaseLeaderboard')
 class OperationPurchaseChartAPI(Resource):
 
-    @operation_ns.doc('post_purchase_chart', security='JWT')
+    @operation_ns.doc('post_purchase_chart')
     @operation_ns.marshal_list_with(operation_purchase_leaderboard_model)
     @operation_ns.response(200, description='Returns a sorted list of purchases per customer')
     def post(self):
         """
         Returns a sorted list of purchases by customer
         """
-        per_user_purchase = dict()
-        for purchase in db.session.query(Purchase).all():
-            if purchase.purchase_customer_mail_address not in per_user_purchase:
-                per_user_purchase[purchase.purchase_customer_mail_address] = 1
-            else:
-                per_user_purchase[purchase.purchase_customer_mail_address] += 1
-        return sorted([{'customer': item[0], 'purchases': item[1]} for item in per_user_purchase.items()],
-                      key=lambda x: x['purchases'], reverse=True), 200
+        return purchase_leaderboard(), 200
