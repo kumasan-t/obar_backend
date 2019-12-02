@@ -22,7 +22,7 @@ class Purchase(db.Model):
     purchase_item = db.relationship('PurchaseItem', backref='Purchase')
 
     def __repr__(self):
-        return '<Purchase {}{} >'.format(self.purchase_number, self.purchase_customer_mail_address)
+        return '<Purchase {}{} >'.format(self.purchase_code_uuid, self.purchase_customer_mail_address)
 
     def __init__(self, purchase_date, purchase_customer_mail_address):
         # Generates a UUID for the Purchase

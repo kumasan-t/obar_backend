@@ -67,3 +67,17 @@ product_post_fields = {
                                   description='Product location',
                                   attribute='product_location_id')
 }
+
+purchase_item_fields = {
+    'uuid': fields.String(description='Purchase item UUID',
+                          attribute='purchase_item_uuid'),
+    'quantity': fields.Integer(description='Purchase item quantity',
+                               attribute='purchase_item_quantity'),
+    'price': fields.Float(description='Purchase item price',
+                          attribute='purchase_item_price')
+}
+
+operation_purchase_leaderboard_fields = {
+    'customer': fields.String(description='Customer mail address'),
+    'purchases': fields.Integer(description='Customer mail address')
+}

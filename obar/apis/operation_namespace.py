@@ -1,10 +1,13 @@
-from flask_restplus import Resource, Namespace, fields
-from obar.models import Customer, Purchase, PurchaseItem, Product
-from flask import request
-from obar.models import db
-from werkzeug.exceptions import NotFound, UnprocessableEntity
 from datetime import datetime as dt
+
+from flask import request
+from flask_restplus import Resource, Namespace, fields
+from werkzeug.exceptions import NotFound, UnprocessableEntity
+
+from obar.models import Customer, Purchase, PurchaseItem, Product
+from obar.models import db
 from .decorator.auth_decorator import customer_token_required
+from .marshal.fields import purchase_item_fields, operation_purchase_leaderboard_fields
 
 authorizations = {
     "JWT": {
@@ -28,6 +31,9 @@ perform_purchase_model = operation_ns.model('Purchase Order', {
                                            description='Customer identifier'),
     'purchase_details': fields.List(fields.Nested(purchase_details_model))
 })
+
+purchase_item_model = operation_ns.model('Purchase Item', purchase_item_fields)
+operation_purchase_leaderboard_model = operation_ns.model('Purchase Chart', operation_purchase_leaderboard_fields)
 
 
 @operation_ns.route('/purchaseProducts')
@@ -84,3 +90,23 @@ class OperationAPI(Resource):
             db.session.add(purchase_item)
         db.session.commit()
         return '', 200
+
+
+@operation_ns.route('/purchaseLeaderboard')
+class OperationPurchaseChartAPI(Resource):
+
+    @operation_ns.doc('post_purchase_chart', security='JWT')
+    @operation_ns.marshal_list_with(operation_purchase_leaderboard_model)
+    @operation_ns.response(200, description='Returns a sorted list of purchases per customer')
+    def post(self):
+        """
+        Returns a sorted list of purchases by customer
+        """
+        per_user_purchase = dict()
+        for purchase in db.session.query(Purchase).all():
+            if purchase.purchase_customer_mail_address not in per_user_purchase:
+                per_user_purchase[purchase.purchase_customer_mail_address] = 1
+            else:
+                per_user_purchase[purchase.purchase_customer_mail_address] += 1
+        return sorted([{'customer': item[0], 'purchases': item[1]} for item in per_user_purchase.items()],
+                      key=lambda x: x['purchases'], reverse=True), 200
