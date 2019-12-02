@@ -6,9 +6,9 @@ from werkzeug.exceptions import NotFound, UnprocessableEntity
 
 from obar.models import Customer, Purchase, PurchaseItem, Product
 from obar.models import db
-from .service.operation_service import purchase_leaderboard
+from .service.operation_service import purchase_leaderboard, best_selling_product
 from .decorator.auth_decorator import customer_token_required
-from .marshal.fields import purchase_item_fields, operation_purchase_leaderboard_fields
+from .marshal.fields import purchase_item_fields, operation_purchase_leaderboard_fields, operation_best_selling_fields
 
 authorizations = {
     "JWT": {
@@ -35,6 +35,7 @@ perform_purchase_model = operation_ns.model('Purchase Order', {
 
 purchase_item_model = operation_ns.model('Purchase Item', purchase_item_fields)
 operation_purchase_leaderboard_model = operation_ns.model('Purchase Chart', operation_purchase_leaderboard_fields)
+operation_best_selling_model = operation_ns.model('Best Selling', operation_best_selling_fields)
 
 
 @operation_ns.route('/purchaseProducts')
@@ -98,9 +99,23 @@ class OperationPurchaseChartAPI(Resource):
 
     @operation_ns.doc('post_purchase_chart')
     @operation_ns.marshal_list_with(operation_purchase_leaderboard_model)
-    @operation_ns.response(200, description='Returns a sorted list of purchases per customer')
+    @operation_ns.response(200, description='Success')
     def post(self):
         """
         Returns a sorted list of purchases by customer
         """
         return purchase_leaderboard(), 200
+
+
+@operation_ns.route('/bestProducts')
+class OperationBestProductAPI(Resource):
+
+    @operation_ns.doc('post_best_products')
+    @operation_ns.response(200, description='Success')
+    @operation_ns.marshal_list_with(operation_best_selling_model)
+    def post(self):
+        """
+        Returns the best-selling product
+        :return:
+        """
+        return best_selling_product(), 200
