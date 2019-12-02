@@ -22,7 +22,7 @@ purchase_output_model = purchase_ns.inherit('Purchase Output', purchase_model, {
 })
 
 
-@purchase_ns.route('/')
+@purchase_ns.route('')
 class PurchaseListAPI(Resource):
 
     @purchase_ns.marshal_list_with(purchase_output_model)

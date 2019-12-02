@@ -34,7 +34,7 @@ product_put_model = product_ns.model('Product Update', product_put_fields)
 product_image_model = product_ns.model('Product Image', product_image_fields)
 
 
-@product_ns.route('/')
+@product_ns.route('')
 class ProductListAPI(Resource):
 
     @product_ns.response(200, 'Return a list of products')

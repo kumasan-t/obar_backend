@@ -19,7 +19,7 @@ site_model = site_ns.model('Site', site_fields)
 site_model_post = site_ns.model('Site Post', site_fields_post)
 
 
-@site_ns.route('/')
+@site_ns.route('')
 class SitesAPI(Resource):
 
     @site_ns.doc('get_sites')

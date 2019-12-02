@@ -61,7 +61,7 @@ customer_put_model = customer_ns.model('Customer Update', {
 })
 
 
-@customer_ns.route('/')
+@customer_ns.route('')
 class CustomerListAPI(Resource):
 
     @customer_ns.doc('get_customer_list', security='JWT')
