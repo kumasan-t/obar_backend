@@ -7,7 +7,7 @@ from werkzeug.exceptions import NotFound, UnprocessableEntity
 from obar.models import Customer, Purchase, PurchaseItem, Product
 from obar.models import db
 from .service.operation_service import purchase_leaderboard, best_selling_product, produce_expenses
-from .decorator.auth_decorator import customer_token_required
+from .decorator.auth_decorator import customer_token_required, admin_token_required
 from .marshal.fields import purchase_item_fields, operation_purchase_leaderboard_fields, operation_best_selling_fields
 
 authorizations = {
@@ -135,6 +135,7 @@ class OperationBestProductAPI(Resource):
 @operation_ns.route("/produceExpensesReport")
 class OperationProduceExpenses(Resource):
 
+    @admin_token_required
     @operation_ns.doc('post_produce_expense')
     @operation_ns.marshal_list_with(operation_produce_expenses_model)
     def post(self):
