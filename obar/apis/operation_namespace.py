@@ -6,7 +6,7 @@ from werkzeug.exceptions import NotFound, UnprocessableEntity
 
 from obar.models import Customer, Purchase, PurchaseItem, Product
 from obar.models import db
-from .service.operation_service import purchase_leaderboard, best_selling_product
+from .service.operation_service import purchase_leaderboard, best_selling_product, produce_expenses
 from .decorator.auth_decorator import customer_token_required
 from .marshal.fields import purchase_item_fields, operation_purchase_leaderboard_fields, operation_best_selling_fields
 
@@ -31,6 +31,18 @@ perform_purchase_model = operation_ns.model('Purchase Order', {
     'customer_mail_address': fields.String(required=True,
                                            description='Customer identifier'),
     'purchase_details': fields.List(fields.Nested(purchase_details_model))
+})
+
+produce_expense_nested_model = operation_ns.model('Purchase Nested', {
+    'date': fields.Date(description='Purchase date'),
+    'code': fields.String(description='Purchase UUID'),
+    'cost': fields.Float(description='Purchase cost')
+})
+
+operation_produce_expenses_model = operation_ns.model('Expense Review', {
+    'customer': fields.String(description='Customer mail address'),
+    'total_expenses': fields.Float(description='Total purchases costs'),
+    'purchases': fields.List(fields.Nested(produce_expense_nested_model))
 })
 
 purchase_item_model = operation_ns.model('Purchase Item', purchase_item_fields)
@@ -116,6 +128,17 @@ class OperationBestProductAPI(Resource):
     def post(self):
         """
         Returns the best-selling product
-        :return:
         """
         return best_selling_product(), 200
+
+
+@operation_ns.route("/produceExpensesReport")
+class OperationProduceExpenses(Resource):
+
+    @operation_ns.doc('post_produce_expense')
+    @operation_ns.marshal_list_with(operation_produce_expenses_model)
+    def post(self):
+        """
+        Produce the expense bill
+        """
+        return produce_expenses(), 200

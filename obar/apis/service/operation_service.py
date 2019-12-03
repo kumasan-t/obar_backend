@@ -1,4 +1,4 @@
-from obar.models import db, Purchase, Product
+from obar.models import db, Purchase, Product, Customer
 
 
 def purchase_leaderboard():
@@ -20,4 +20,29 @@ def best_selling_product():
           'purchases': len(product.purchaseItem)}
          for product in products if len(product.purchaseItem) is not 0]
         , key=lambda x: x['purchases'], reverse=True)
+    return result
+
+
+def produce_expenses():
+    result = []
+    customers = db.session.query(Customer).all()
+    for customer in customers:
+        total_expense = 0
+        purchases = []
+        for purchase in customer.purchase:
+            single_expense = 0
+            for item in purchase.purchase_item:
+                single_expense += item.purchase_item_price
+                total_expense += item.purchase_item_price
+            purchases.append(
+                {
+                    'date': purchase.purchase_date,
+                    'code': purchase.purchase_code_uuid,
+                    'cost': single_expense
+                })
+        customer_review = {
+            'customer': customer.customer_mail_address,
+            'total_expenses': total_expense,
+            'purchases': purchases}
+        result.append(customer_review)
     return result
