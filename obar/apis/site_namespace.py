@@ -1,5 +1,6 @@
 from flask_restplus import Namespace, Resource, fields
 from flask import request
+from .decorator import customer_token_required, admin_token_required
 from .marshal.fields import site_fields, site_fields_post
 from obar.models import db, Site
 from sqlalchemy.exc import OperationalError, IntegrityError
@@ -22,7 +23,8 @@ site_model_post = site_ns.model('Site Post', site_fields_post)
 @site_ns.route('')
 class SitesAPI(Resource):
 
-    @site_ns.doc('get_sites')
+    @customer_token_required
+    @site_ns.doc('get_sites', security='JWT')
     @site_ns.response(200, 'Return a list of products')
     @site_ns.response(500, 'Internal server error')
     @site_ns.marshal_list_with(site_model)
@@ -36,7 +38,8 @@ class SitesAPI(Resource):
             raise InternalServerError(description='Site table does not exists.')
         return sites, 200
 
-    @site_ns.doc('post_site')
+    @admin_token_required
+    @site_ns.doc('post_site', security='JWT')
     @site_ns.response(201, 'Resource created')
     @site_ns.response(500, 'Internal server error')
     @site_ns.response(409, 'Resource already exists')
@@ -59,15 +62,20 @@ class SitesAPI(Resource):
 @site_ns.route('/<int:id>')
 class SiteAPI(Resource):
 
-    @site_ns.doc('get_site')
+    @customer_token_required
+    @site_ns.doc('get_site', security='JWT')
     @site_ns.marshal_with(site_model)
     @site_ns.response(200, 'Success')
     @site_ns.response(404, 'Resource not found')
+    @site_ns.response(500, 'Internal server error')
     def get(self, id):
         """
         Get site data
         """
-        site = Site.query.filter_by(site_id=id).first()
+        try:
+            site = Site.query.filter_by(site_id=id).first()
+        except OperationalError:
+            raise InternalServerError(description='Site table does not exists')
         if site is None:
             raise NotFound()
         return site, 200

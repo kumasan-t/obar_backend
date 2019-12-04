@@ -1,10 +1,19 @@
 from flask_restplus import Namespace, Resource, fields
 from sqlalchemy.exc import OperationalError
 from werkzeug.exceptions import InternalServerError
+from .decorator import admin_token_required
 
 from obar.models import Purchase
 
-purchase_ns = Namespace('purchase', description='Purchase related operations')
+authorizations = {
+    "JWT": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "Authorization"
+    }
+}
+
+purchase_ns = Namespace('purchase', description='Purchase related operations', authorizations=authorizations)
 
 purchase_model = purchase_ns.model('Purchase', {
     'date': fields.Date(required=True,
@@ -25,10 +34,11 @@ purchase_output_model = purchase_ns.inherit('Purchase Output', purchase_model, {
 @purchase_ns.route('')
 class PurchaseListAPI(Resource):
 
+    @admin_token_required
     @purchase_ns.marshal_list_with(purchase_output_model)
     @purchase_ns.response(200, 'Return a list of purchases')
     @purchase_ns.response(500, 'Internal server error')
-    @purchase_ns.doc('get_purchase_list')
+    @purchase_ns.doc('get_purchase_list', security='JWT')
     def get(self):
         """
         Returns a list of Purchases

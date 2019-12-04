@@ -7,7 +7,7 @@ from werkzeug.exceptions import InternalServerError, NotFound, BadRequest, Confl
 
 from obar import db
 from obar.models import Product, ProductImage
-from .decorator import admin_token_required
+from .decorator import admin_token_required, customer_token_required
 from .marshal.fields import product_image_fields, product_put_fields, product_post_fields
 
 authorizations = {
@@ -37,9 +37,10 @@ product_image_model = product_ns.model('Product Image', product_image_fields)
 @product_ns.route('')
 class ProductListAPI(Resource):
 
+    @customer_token_required
     @product_ns.response(200, 'Return a list of products')
     @product_ns.response(500, 'Internal server error')
-    @product_ns.doc('get_product_list')
+    @product_ns.doc('get_product_list', security='JWT')
     @product_ns.marshal_list_with(product_output_model)
     def get(self):
         """
@@ -83,7 +84,8 @@ class ProductListAPI(Resource):
 @product_ns.route('/<string:code>')
 class ProductAPI(Resource):
 
-    @product_ns.doc('get_product')
+    @customer_token_required
+    @product_ns.doc('get_product', security='JWT')
     @product_ns.marshal_with(product_output_model)
     @product_ns.response(200, 'Success')
     @product_ns.response(404, 'Product not found')
@@ -147,7 +149,8 @@ class ProductAPI(Resource):
 @product_ns.route('/<string:code>/img')
 class ProductImageAPI(Resource):
 
-    @product_ns.doc('get_product_image')
+    @customer_token_required
+    @product_ns.doc('get_product_image', security='JWT')
     @product_ns.response(200, 'Success')
     @product_ns.response(404, 'Product not Found')
     @product_ns.response(404, 'Image not Found')
