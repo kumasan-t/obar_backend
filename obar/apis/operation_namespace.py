@@ -54,6 +54,7 @@ operation_best_selling_model = operation_ns.model('Best Selling', operation_best
 class OperationAPI(Resource):
 
     @operation_ns.doc('post_purchase_products', security='JWT')
+    @operation_ns.response(204, description='No Content')
     @operation_ns.expect(perform_purchase_model, validate=True)
     @customer_token_required
     def post(self):
@@ -103,7 +104,7 @@ class OperationAPI(Resource):
                                          purchase_item_quantity=details['purchase_quantity'])
             db.session.add(purchase_item)
         db.session.commit()
-        return '', 200
+        return '', 204
 
 
 @operation_ns.route('/purchaseLeaderboard')
@@ -113,6 +114,7 @@ class OperationPurchaseChartAPI(Resource):
     @operation_ns.doc('post_purchase_chart', security='JWT')
     @operation_ns.marshal_list_with(operation_purchase_leaderboard_model)
     @operation_ns.response(200, description='Success')
+    @operation_ns.response(500, description='Internal Server Error')
     def post(self):
         """
         Returns a sorted list of purchases by customer
@@ -131,7 +133,7 @@ class OperationBestProductAPI(Resource):
         """
         Returns the best-selling product
         """
-        return best_selling_product(), 200
+        return best_selling_product()
 
 
 @operation_ns.route("/produceExpensesReport")
@@ -139,9 +141,11 @@ class OperationProduceExpenses(Resource):
 
     @admin_token_required
     @operation_ns.doc('post_produce_expense', security='JWT')
+    @operation_ns.response(200, description='Success')
+    @operation_ns.response(500, description='Internal Server Error')
     @operation_ns.marshal_list_with(operation_produce_expenses_model)
     def post(self):
         """
         Produce the expense bill
         """
-        return produce_expenses(), 200
+        return produce_expenses()
