@@ -3,7 +3,7 @@ import base64
 from flask import request
 from flask_restplus import Namespace, Resource, fields
 from sqlalchemy.exc import OperationalError, IntegrityError
-from werkzeug.exceptions import InternalServerError, NotFound, BadRequest
+from werkzeug.exceptions import InternalServerError, NotFound, BadRequest, Conflict, UnprocessableEntity
 
 from obar import db
 from obar.models import Product, ProductImage
@@ -72,8 +72,11 @@ class ProductListAPI(Resource):
             db.session.commit()
         except OperationalError:
             raise InternalServerError(description='Product table does not exists.')
-        except IntegrityError:
-            raise BadRequest('Causes may be: name not unique, non existent location ID')
+        except IntegrityError as e:
+            if str(e.orig).startswith('UNIQUE'):
+                raise Conflict('Product name is not unique')
+            else:
+                raise UnprocessableEntity('Location ID does not exists')
         return {'message': 'Resource created'}, 201
 
 
