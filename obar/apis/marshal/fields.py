@@ -83,7 +83,27 @@ operation_purchase_leaderboard_fields = {
 }
 
 operation_best_selling_fields = {
-    'product_name': fields.String(description='Product name'),
-    'product_code': fields.String(description='Product code'),
-    'purchases': fields.Integer(description='Quantities purchased')
+    'name': fields.String(requred=False,
+                          description='Product name',
+                          attribute='product_name'),
+    'uuid': fields.String(description='Product UUID',
+                          attribute='product_code_uuid'),
+    'availability': fields.Boolean(required=False,
+                                   description='Product availability',
+                                   attribute='product_availability'),
+    'discount': fields.Float(required=False,
+                             description='Product discount',
+                             attribute='product_discount'),
+    'price': fields.Float(required=False,
+                          description='Product description',
+                          attribute='product_price'),
+    'quantity': fields.Integer(required=False,
+                               description='Product quantity',
+                               attribute='product_quantity'),
+    'location_id': fields.Integer(required=False,
+                                  description='Product location',
+                                  attribute='product_location_id'),
+    'num_of_purchases': fields.Integer(description='Number of purchases',
+                                       attribute='purchases')
+
 }
