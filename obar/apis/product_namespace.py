@@ -186,7 +186,11 @@ class ProductImageAPI(Resource):
                              product_image_filename=request.json['filename'],
                              product_image_binary=base64.b64decode(request.json['file_base64']))
         db.session.add(image)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except IntegrityError:
+            db.session.remove()
+            raise Conflict('filename must be unique')
 
         return '', 201
 
