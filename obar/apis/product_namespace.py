@@ -78,7 +78,7 @@ class ProductListAPI(Resource):
                 raise Conflict('Product name is not unique')
             else:
                 raise UnprocessableEntity('Location ID does not exists')
-        return {'message': 'Resource created'}, 201
+        return {'product_code': new_product.product_code_uuid}, 201
 
 
 @product_ns.route('/<string:code>')
