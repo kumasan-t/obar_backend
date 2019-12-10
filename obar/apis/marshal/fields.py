@@ -79,6 +79,8 @@ purchase_item_fields = {
 
 operation_purchase_leaderboard_fields = {
     'customer': fields.String(description='Customer mail address'),
+    'first_name': fields.String(description='Customer first name'),
+    'last_name': fields.String(description='Customer last name'),
     'purchases': fields.Integer(description='Number of purchases')
 }
 

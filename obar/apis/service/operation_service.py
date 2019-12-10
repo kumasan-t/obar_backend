@@ -1,22 +1,23 @@
 from sqlalchemy.exc import OperationalError
 from werkzeug.exceptions import InternalServerError
 
-from obar.models import db, Purchase, Product, Customer
+from obar.models import db, Product, Customer
 
 
 def purchase_leaderboard():
     per_user_purchase = dict()
+    leaderboard = []
     try:
-        purchases = db.session.query(Purchase).all()
+        customers = db.session.query(Customer).all()
     except OperationalError:
-        raise InternalServerError('Purchase table does not exists')
-    for purchase in purchases:
-        if purchase.purchase_customer_mail_address not in per_user_purchase:
-            per_user_purchase[purchase.purchase_customer_mail_address] = 1
-        else:
-            per_user_purchase[purchase.purchase_customer_mail_address] += 1
-    return sorted([{'customer': item[0], 'purchases': item[1]} for item in per_user_purchase.items()],
-                  key=lambda x: x['purchases'], reverse=True)
+        raise InternalServerError('Customer table does not exists')
+    for customer in customers:
+        per_user_purchase['customer'] = customer.customer_mail_address
+        per_user_purchase['first_name'] = customer.customer_first_name
+        per_user_purchase['last_name'] = customer.customer_last_name
+        per_user_purchase['purchases'] = len(customer.purchase)
+        leaderboard.append(per_user_purchase.copy())
+    return sorted(leaderboard, key=lambda x: x['purchases'], reverse=True)
 
 
 def best_selling_product():
