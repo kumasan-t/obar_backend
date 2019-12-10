@@ -2,13 +2,13 @@ from datetime import datetime as dt
 
 from flask import request
 from flask_restplus import Resource, Namespace, fields
-from werkzeug.exceptions import NotFound, UnprocessableEntity
+from werkzeug.exceptions import NotFound, UnprocessableEntity, Forbidden
 
 from obar.models import Customer, Purchase, PurchaseItem, Product
 from obar.models import db
 from .decorator.auth_decorator import customer_token_required, admin_token_required
 from .marshal.fields import purchase_item_fields, operation_purchase_leaderboard_fields, operation_best_selling_fields
-from .service.operation_service import purchase_leaderboard, best_selling_product, produce_expenses
+from .service.operation_service import purchase_leaderboard, best_selling_product, produce_expenses, produce_purchase_list
 
 authorizations = {
     "JWT": {
@@ -20,6 +20,7 @@ authorizations = {
 
 operation_ns = Namespace('operation', description='Common operations', authorizations=authorizations)
 
+purchase_item_model = operation_ns.model('Purchase Item', purchase_item_fields)
 purchase_details_model = operation_ns.model('Product details', {
     'product_code': fields.String(required=True,
                                   description='Product code'),
@@ -45,7 +46,10 @@ operation_produce_expenses_model = operation_ns.model('Expense Review', {
     'purchases': fields.List(fields.Nested(produce_expense_nested_model))
 })
 
-purchase_item_model = operation_ns.model('Purchase Item', purchase_item_fields)
+operation_produce_purchase_model = operation_ns.model('Purchase List', {
+    'date': fields.Date(description='Purchase date'),
+    'items': fields.List(fields.Nested(purchase_item_model))
+})
 operation_purchase_leaderboard_model = operation_ns.model('Purchase Chart', operation_purchase_leaderboard_fields)
 operation_best_selling_model = operation_ns.model('Best Selling', operation_best_selling_fields)
 
@@ -149,3 +153,22 @@ class OperationProduceExpenses(Resource):
         Produce the expense bill
         """
         return produce_expenses()
+
+
+@operation_ns.route('/producePurchasesList/<string:mail_address>')
+class OperationProducePurchaseList(Resource):
+
+    @customer_token_required
+    @operation_ns.doc('post_produce_purchase_report', security='JWT')
+    @operation_ns.response(200, description='Success')
+    @operation_ns.response(500, description='Internal Server Error')
+    @operation_ns.response(403, description='Forbidden')
+    @operation_ns.marshal_list_with(operation_produce_purchase_model)
+    def post(self, mail_address):
+        """
+        Produce the expense bill
+        """
+        data = Customer.decode_auth_token(request.headers['Authorization'])
+        if data['customer'] != mail_address:
+            raise Forbidden("You don't have the permission to access the requested resource")
+        return produce_purchase_list(mail_address)

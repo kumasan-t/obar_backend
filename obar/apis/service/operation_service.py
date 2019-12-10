@@ -66,3 +66,21 @@ def produce_expenses():
             'purchases': purchases}
         result.append(customer_review)
     return result, 200
+
+
+def produce_purchase_list(mail_address):
+    try:
+        customer = db.session.query(Customer).filter_by(customer_mail_address=mail_address).first()
+    except OperationalError:
+        raise InternalServerError('Customer table does not exists')
+    per_user_purchase = []
+    for purchase in customer.purchase:
+        purchase_details = dict()
+        purchase_details['date'] = purchase.purchase_date
+        item_list = []
+        for item in purchase.purchase_item:
+            item_list.append(item)
+        purchase_details['items'] = item_list
+        per_user_purchase.append(purchase_details)
+    return per_user_purchase, 200
+
