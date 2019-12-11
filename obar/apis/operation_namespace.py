@@ -2,10 +2,11 @@ from datetime import datetime as dt
 
 from flask import request
 from flask_restplus import Resource, Namespace, fields
-from werkzeug.exceptions import NotFound, UnprocessableEntity, Forbidden
+from werkzeug.exceptions import NotFound, UnprocessableEntity, Forbidden, InternalServerError
 
 from obar.models import Customer, Purchase, PurchaseItem, Product
 from obar.models import db
+from sqlalchemy.exc import OperationalError
 from .decorator.auth_decorator import customer_token_required, admin_token_required
 from .marshal.fields import purchase_item_fields, operation_purchase_leaderboard_fields, operation_best_selling_fields
 from .service.operation_service import purchase_leaderboard, best_selling_product, produce_expenses, produce_purchase_list
@@ -29,8 +30,6 @@ purchase_details_model = operation_ns.model('Product details', {
 })
 
 perform_purchase_model = operation_ns.model('Purchase Order', {
-    'customer_mail_address': fields.String(required=True,
-                                           description='Customer identifier'),
     'purchase_details': fields.List(fields.Nested(purchase_details_model))
 })
 
@@ -65,10 +64,13 @@ class OperationAPI(Resource):
         """
         Performs a purchase operation
         """
-        customer = Customer.query.filter_by(customer_mail_address=request.json['customer_mail_address']).first()
+        data = Customer.decode_auth_token(request.headers['Authorization'])
+        try:
+            customer = Customer.query.filter_by(customer_mail_address=data['customer']).first()
+        except OperationalError:
+            raise InternalServerError('Customer table is missing')
         purchase = Purchase(purchase_date=dt.now(),
                             purchase_customer_mail_address=customer.customer_mail_address)
-
         if customer is None:
             raise NotFound(description='Resource ' + customer.__repr__() + ' is not found')
 
@@ -91,6 +93,8 @@ class OperationAPI(Resource):
         db.session.add(purchase)
         for details in request.json['purchase_details']:
             product = Product.query.filter_by(product_code_uuid=details['product_code']).first()
+            if product is None:
+                raise NotFound('Product ' + details['product_code'] + ' not found')
             if not product.product_availability:
                 db.session.remove()
                 raise UnprocessableEntity('Unavailable product selected')
