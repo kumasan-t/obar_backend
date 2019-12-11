@@ -167,7 +167,7 @@ class PurchaseItem(db.Model):
         self.purchase_item_product_code_uuid = purchase_item_product_code_uuid
         self.purchase_item_quantity = purchase_item_quantity
         product = Product.query.filter_by(product_code_uuid=purchase_item_product_code_uuid).first()
-        self.purchase_item_price = (1 - product.product_discount) * product.product_price * purchase_item_quantity
+        self.purchase_item_price = (1 - product.product_discount/100) * product.product_price * purchase_item_quantity
 
     def __repr__(self):
         return '<PurchaseItem {}>'.format(self.purchase_item_uuid)

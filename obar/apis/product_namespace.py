@@ -62,6 +62,8 @@ class ProductListAPI(Resource):
         """
         Creates a new product
         """
+        if 100 < request.json['discount'] or request.json['discount'] < 0:
+            raise UnprocessableEntity('discount must be in between 0 and 100')
         new_product = Product(product_name=request.json['name'],
                               product_availability=request.json['availability'],
                               product_discount=request.json['discount'],
