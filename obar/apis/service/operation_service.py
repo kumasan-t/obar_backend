@@ -1,7 +1,10 @@
+from datetime import datetime as dt
+from datetime import timedelta as td
+
 from sqlalchemy.exc import OperationalError
 from werkzeug.exceptions import InternalServerError
 
-from obar.models import db, Product, Customer
+from obar.models import db, Product, Customer, Purchase, PurchaseItem
 
 
 def purchase_leaderboard():
@@ -84,3 +87,37 @@ def produce_purchase_list(mail_address):
         per_user_purchase.append(purchase_details)
     return per_user_purchase, 200
 
+
+def recent_purchases():
+    """
+    Shows the most recent purchases within X minutes
+    """
+    result = db.session.query(Purchase, Product, PurchaseItem)\
+        .filter(Purchase.purchase_date > dt.utcnow() - td(minutes=10)) \
+        .filter(PurchaseItem.purchase_item_product_code_uuid == Product.product_code_uuid) \
+        .filter(PurchaseItem.purchase_item_purchase_code_uuid == Purchase.purchase_code_uuid) \
+        .all()
+    recent_purchases_details = dict()
+    for entry in result:
+        recent_product = {
+                    "product": entry[1].product_name,
+                    "quantity": entry[2].purchase_item_quantity,
+                    "price": entry[2].purchase_item_price
+                }
+        if entry[0].purchase_code_uuid not in recent_purchases_details.keys():
+            recent_purchases_details[entry[0].purchase_code_uuid] = [recent_product]
+        else:
+            recent_purchases_details[entry[0].purchase_code_uuid].append(recent_product)
+    return recent_purchases_details
+
+
+def gift_purchase(purchase_uuid, customer_mail_address):
+    """
+    Replace the customer mail address of a purchase with a new one
+    """
+    result = db.session.query(Purchase) \
+        .filter(Purchase.purchase_date > dt.utcnow() - td(minutes=10)) \
+        .filter(Purchase.purchase_code_uuid == purchase_uuid) \
+        .first()
+    result.purchase_customer_mail_address = customer_mail_address
+    db.session.commit()

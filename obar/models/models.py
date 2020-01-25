@@ -17,7 +17,7 @@ class Purchase(db.Model):
     __tablename__ = 'purchase'
 
     purchase_code_uuid = db.Column(db.String(), primary_key=True)
-    purchase_date = db.Column(db.Date())
+    purchase_date = db.Column(db.DateTime())
     purchase_customer_mail_address = db.Column(db.String(), db.ForeignKey('customer.customer_mail_address'))
     purchase_item = db.relationship('PurchaseItem', backref='Purchase')
 

@@ -9,7 +9,9 @@ from obar.models import db
 from sqlalchemy.exc import OperationalError
 from .decorator.auth_decorator import customer_token_required, admin_token_required
 from .marshal.fields import purchase_item_fields, operation_purchase_leaderboard_fields, operation_best_selling_fields
-from .service.operation_service import purchase_leaderboard, best_selling_product, produce_expenses, produce_purchase_list
+from .service.operation_service import purchase_leaderboard, best_selling_product, \
+    produce_expenses, produce_purchase_list, recent_purchases, gift_purchase
+from obar.apis.purchase_namespace import purchase_output_model
 
 authorizations = {
     "JWT": {
@@ -69,7 +71,7 @@ class OperationAPI(Resource):
             customer = Customer.query.filter_by(customer_mail_address=data['customer']).first()
         except OperationalError:
             raise InternalServerError('Customer table is missing')
-        purchase = Purchase(purchase_date=dt.now(),
+        purchase = Purchase(purchase_date=dt.utcnow(),
                             purchase_customer_mail_address=customer.customer_mail_address)
         if customer is None:
             raise NotFound(description='Resource ' + customer.__repr__() + ' is not found')
@@ -176,3 +178,29 @@ class OperationProducePurchaseList(Resource):
         if data['customer'] != mail_address:
             raise Forbidden("You don't have the permission to access the requested resource")
         return produce_purchase_list(mail_address)
+
+
+@operation_ns.route('/recentPurchase')
+class OperationRecentPurchase(Resource):
+
+    @operation_ns.doc('post_recent_purchase')
+    @operation_ns.response(200, description='Success')
+    @operation_ns.response(500, description='Internal Server Error')
+    def post(self):
+        """
+        Show the most recent purchases
+        """
+        return recent_purchases()
+
+
+@operation_ns.route('/giftPurchase/<string:purchase_uuid>')
+class OperationGiftPurchase(Resource):
+
+    @customer_token_required
+    @operation_ns.doc('gift_purchase', security='JWT')
+    @operation_ns.response(204, description='No Content')
+    @operation_ns.response(500, description='Internal Server Error')
+    def post(self, purchase_uuid):
+        data = Customer.decode_auth_token(request.headers['Authorization'])
+        gift_purchase(purchase_uuid, data['customer'])
+        return '', 204
