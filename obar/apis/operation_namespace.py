@@ -11,7 +11,6 @@ from .decorator.auth_decorator import customer_token_required, admin_token_requi
 from .marshal.fields import purchase_item_fields, operation_purchase_leaderboard_fields, operation_best_selling_fields
 from .service.operation_service import purchase_leaderboard, best_selling_product, \
     produce_expenses, produce_purchase_list, recent_purchases, gift_purchase
-from obar.apis.purchase_namespace import purchase_output_model
 
 authorizations = {
     "JWT": {

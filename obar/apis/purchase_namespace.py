@@ -1,7 +1,7 @@
 from flask_restplus import Namespace, Resource, fields
 from sqlalchemy.exc import OperationalError
-from werkzeug.exceptions import InternalServerError
-from .decorator import admin_token_required
+from werkzeug.exceptions import InternalServerError, NotFound
+from .decorator import admin_token_required, customer_token_required
 
 from obar.models import Purchase
 
@@ -16,7 +16,10 @@ authorizations = {
 purchase_ns = Namespace('purchase', description='Purchase related operations', authorizations=authorizations)
 
 purchase_model = purchase_ns.model('Purchase', {
-    'date': fields.Date(required=True,
+    'gifted': fields.Boolean(required=True,
+                              description='Gifted purchase',
+                              attribute='purchase_gifted'),
+    'date': fields.DateTime(required=True,
                         description='Purchase date',
                         attribute='purchase_date'),
     'mail_address': fields.String(required=True,
@@ -48,3 +51,15 @@ class PurchaseListAPI(Resource):
         except OperationalError:
             raise InternalServerError(description='Purchase table does not exists')
         return purchase_list, 200
+
+
+@purchase_ns.route('/<string:purchase_uuid>')
+class PurchaseAPI(Resource):
+    @customer_token_required
+    @purchase_ns.doc('get_purchase', security='JWT')
+    @purchase_ns.marshal_with(purchase_model)
+    def get(self, purchase_uuid):
+        purchase = Purchase.query.filter_by(purchase_code_uuid=purchase_uuid).first()
+        if purchase is None:
+            raise NotFound()
+        return purchase, 200
