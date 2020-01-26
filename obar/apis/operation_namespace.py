@@ -58,7 +58,10 @@ operation_best_selling_model = operation_ns.model('Best Selling', operation_best
 class OperationAPI(Resource):
 
     @operation_ns.doc('post_purchase_products', security='JWT')
-    @operation_ns.response(204, description='No Content')
+    @operation_ns.response(200, description='The purchase has been performed')
+    @operation_ns.response(500, description='Errors in db')
+    @operation_ns.response(404, description='Could not found customer')
+    @operation_ns.response(422, description='Request is semantically correct but cannot be processed')
     @operation_ns.expect(perform_purchase_model, validate=True)
     @customer_token_required
     def post(self):
@@ -113,7 +116,7 @@ class OperationAPI(Resource):
                                          purchase_item_quantity=details['purchase_quantity'])
             db.session.add(purchase_item)
         db.session.commit()
-        return '', 204
+        return {'purchase_uuid': purchase.purchase_code_uuid}, 200
 
 
 @operation_ns.route('/purchaseLeaderboard')

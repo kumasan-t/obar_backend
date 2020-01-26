@@ -57,6 +57,8 @@ class PurchaseListAPI(Resource):
 class PurchaseAPI(Resource):
     @customer_token_required
     @purchase_ns.doc('get_purchase', security='JWT')
+    @purchase_ns.response(200, 'Return a purchase')
+    @purchase_ns.response(404, 'The resource cannot be found')
     @purchase_ns.marshal_with(purchase_model)
     def get(self, purchase_uuid):
         purchase = Purchase.query.filter_by(purchase_code_uuid=purchase_uuid).first()
