@@ -2,7 +2,7 @@ from datetime import datetime as dt
 from datetime import timedelta as td
 
 from sqlalchemy.exc import OperationalError
-from werkzeug.exceptions import InternalServerError
+from werkzeug.exceptions import InternalServerError, NotFound
 
 from obar.models import db, Product, Customer, Purchase, PurchaseItem
 
@@ -93,7 +93,7 @@ def recent_purchases():
     Shows the most recent purchases within X minutes
     """
     result = db.session.query(Purchase, Product, PurchaseItem)\
-        .filter(Purchase.purchase_date > dt.utcnow() - td(minutes=10)) \
+        .filter(Purchase.purchase_date > dt.utcnow() - td(minutes=2)) \
         .filter(Purchase.purchase_gifted == False) \
         .filter(PurchaseItem.purchase_item_product_code_uuid == Product.product_code_uuid) \
         .filter(PurchaseItem.purchase_item_purchase_code_uuid == Purchase.purchase_code_uuid) \
@@ -117,7 +117,7 @@ def gift_purchase(purchase_uuid, customer_mail_address):
     Replace the customer mail address of a purchase with a new one
     """
     result = db.session.query(Purchase) \
-        .filter(Purchase.purchase_date > dt.utcnow() - td(minutes=10)) \
+        .filter(Purchase.purchase_date > dt.utcnow() - td(minutes=2)) \
         .filter(Purchase.purchase_gifted == False) \
         .filter(Purchase.purchase_code_uuid == purchase_uuid) \
         .first()
@@ -127,4 +127,4 @@ def gift_purchase(purchase_uuid, customer_mail_address):
         db.session.commit()
         return "", 204
     else:
-        return "", 404
+        raise NotFound()
