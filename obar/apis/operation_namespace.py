@@ -10,7 +10,7 @@ from sqlalchemy.exc import OperationalError
 from .decorator.auth_decorator import customer_token_required, admin_token_required
 from .marshal.fields import purchase_item_fields, operation_purchase_leaderboard_fields, operation_best_selling_fields
 from .service.operation_service import purchase_leaderboard, best_selling_product, \
-    produce_expenses, produce_purchase_list, recent_purchases, gift_purchase
+    produce_expenses, produce_purchase_list, recent_purchases, gift_purchase, undo_purchase
 
 authorizations = {
     "JWT": {
@@ -206,3 +206,16 @@ class OperationGiftPurchase(Resource):
     def post(self, purchase_uuid):
         data = Customer.decode_auth_token(request.headers['Authorization'])
         return gift_purchase(purchase_uuid, data['customer'])
+
+
+@operation_ns.route('/undoPurchase/<string:purchase_uuid>')
+class OperationUndoPurchase(Resource):
+
+    @customer_token_required
+    @operation_ns.doc('undo_purchase', security='JWT')
+    @operation_ns.response(204, description='No Content')
+    @operation_ns.response(404, description='The resource may have been already gifted')
+    @operation_ns.response(500, description='Internal Server Error')
+    def post(self, purchase_uuid):
+        data = Customer.decode_auth_token(request.headers['Authorization'])
+        return undo_purchase(purchase_uuid, data['customer']), 204
