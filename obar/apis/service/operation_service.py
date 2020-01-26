@@ -94,6 +94,7 @@ def recent_purchases():
     """
     result = db.session.query(Purchase, Product, PurchaseItem)\
         .filter(Purchase.purchase_date > dt.utcnow() - td(minutes=10)) \
+        .filter(Purchase.purchase_gifted == False) \
         .filter(PurchaseItem.purchase_item_product_code_uuid == Product.product_code_uuid) \
         .filter(PurchaseItem.purchase_item_purchase_code_uuid == Purchase.purchase_code_uuid) \
         .all()
@@ -117,7 +118,13 @@ def gift_purchase(purchase_uuid, customer_mail_address):
     """
     result = db.session.query(Purchase) \
         .filter(Purchase.purchase_date > dt.utcnow() - td(minutes=10)) \
+        .filter(Purchase.purchase_gifted == False) \
         .filter(Purchase.purchase_code_uuid == purchase_uuid) \
         .first()
-    result.purchase_customer_mail_address = customer_mail_address
-    db.session.commit()
+    if result is not None:
+        result.purchase_customer_mail_address = customer_mail_address
+        result.purchase_gifted = True
+        db.session.commit()
+        return "", 204
+    else:
+        return "", 404

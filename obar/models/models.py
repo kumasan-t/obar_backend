@@ -18,6 +18,7 @@ class Purchase(db.Model):
 
     purchase_code_uuid = db.Column(db.String(), primary_key=True)
     purchase_date = db.Column(db.DateTime())
+    purchase_gifted = db.Column(db.Boolean(), default=False)
     purchase_customer_mail_address = db.Column(db.String(), db.ForeignKey('customer.customer_mail_address'))
     purchase_item = db.relationship('PurchaseItem', backref='Purchase')
 

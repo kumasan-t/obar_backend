@@ -199,8 +199,8 @@ class OperationGiftPurchase(Resource):
     @customer_token_required
     @operation_ns.doc('gift_purchase', security='JWT')
     @operation_ns.response(204, description='No Content')
+    @operation_ns.response(404, description='The resource may have been already gifted')
     @operation_ns.response(500, description='Internal Server Error')
     def post(self, purchase_uuid):
         data = Customer.decode_auth_token(request.headers['Authorization'])
-        gift_purchase(purchase_uuid, data['customer'])
-        return '', 204
+        return gift_purchase(purchase_uuid, data['customer'])
