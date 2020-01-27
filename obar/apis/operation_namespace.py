@@ -8,7 +8,8 @@ from obar.models import Customer, Purchase, PurchaseItem, Product
 from obar.models import db
 from sqlalchemy.exc import OperationalError
 from .decorator.auth_decorator import customer_token_required, admin_token_required
-from .marshal.fields import purchase_item_fields, operation_purchase_leaderboard_fields, operation_best_selling_fields
+from .marshal.fields import purchase_item_fields, operation_purchase_leaderboard_fields, operation_best_selling_fields, \
+    operation_check_gift_fields
 from .service.operation_service import purchase_leaderboard, best_selling_product, \
     produce_expenses, produce_purchase_list, recent_purchases, gift_purchase, undo_purchase
 
@@ -52,7 +53,7 @@ operation_produce_purchase_model = operation_ns.model('Purchase List', {
 })
 operation_purchase_leaderboard_model = operation_ns.model('Purchase Chart', operation_purchase_leaderboard_fields)
 operation_best_selling_model = operation_ns.model('Best Selling', operation_best_selling_fields)
-
+operation_check_gift_model = operation_ns.model('Check Gift', operation_check_gift_fields)
 
 @operation_ns.route('/purchaseProducts')
 class OperationAPI(Resource):
@@ -219,3 +220,30 @@ class OperationUndoPurchase(Resource):
     def post(self, purchase_uuid):
         data = Customer.decode_auth_token(request.headers['Authorization'])
         return undo_purchase(purchase_uuid, data['customer']), 204
+
+
+@operation_ns.route('/checkPurchase/<string:purchase_uuid>')
+class OperationCheckPurchase(Resource):
+
+    @customer_token_required
+    @operation_ns.doc('check_purchase', security='JWT')
+    @operation_ns.response(200, 'Check gifter')
+    @operation_ns.response(404, 'The resource cannot be found')
+    @operation_ns.response(500, 'Something strange happened internally')
+    @operation_ns.marshal_with(operation_check_gift_model)
+    def get(self, purchase_uuid):
+        purchase = Purchase.query.filter_by(purchase_code_uuid=purchase_uuid).first()
+        if purchase is None:
+            raise NotFound('purchase_uuid not found')
+        customer = Customer.query.filter_by(customer_mail_address=purchase.purchase_customer_mail_address).first()
+        if customer is None:
+            raise InternalServerError('customer not found in db')
+        response = {
+            'purchase_gifted': purchase.purchase_gifted,
+            'purchase_date': purchase.purchase_date,
+            'customer_first_name': customer.customer_first_name,
+            'customer_last_name': customer.customer_last_name
+        }
+        return response, 200
+
+

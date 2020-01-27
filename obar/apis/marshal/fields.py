@@ -112,3 +112,22 @@ operation_best_selling_fields = {
                                        attribute='purchases')
 
 }
+
+operation_check_gift_fields = {
+    'gifted': fields.Boolean(
+        description='Whether the purchase was gifted or not',
+        attribute='purchase_gifted'
+    ),
+    'date': fields.DateTime(
+        description='Purchase date',
+        attribute='purchase_date'
+    ),
+    'customer_first_name': fields.String(
+        description='Customer name',
+        attribute='customer_first_name'
+    ),
+    'customer_last_name': fields.String(
+        description='Customer last name',
+        attribute='customer_last_name'
+    )
+}

@@ -1,9 +1,9 @@
 from flask_restplus import Namespace, Resource, fields
 from sqlalchemy.exc import OperationalError
 from werkzeug.exceptions import InternalServerError, NotFound
-from .decorator import admin_token_required, customer_token_required
 
 from obar.models import Purchase
+from .decorator import admin_token_required, customer_token_required
 
 authorizations = {
     "JWT": {
@@ -17,11 +17,11 @@ purchase_ns = Namespace('purchase', description='Purchase related operations', a
 
 purchase_model = purchase_ns.model('Purchase', {
     'gifted': fields.Boolean(required=True,
-                              description='Gifted purchase',
-                              attribute='purchase_gifted'),
+                             description='Gifted purchase',
+                             attribute='purchase_gifted'),
     'date': fields.DateTime(required=True,
-                        description='Purchase date',
-                        attribute='purchase_date'),
+                            description='Purchase date',
+                            attribute='purchase_date'),
     'mail_address': fields.String(required=True,
                                   description='Purchase owner',
                                   attribute='purchase_customer_mail_address')
