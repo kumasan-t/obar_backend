@@ -123,7 +123,7 @@ class Customer(db.Model):
 class Product(db.Model):
     __tablename__ = 'product'
 
-    product_name = db.Column(db.String(), unique=True)
+    product_name = db.Column(db.String())
     product_code_uuid = db.Column(db.String(), primary_key=True)
     product_availability = db.Column(db.Boolean())
     product_price = db.Column(db.Float())
@@ -132,6 +132,7 @@ class Product(db.Model):
     product_location_id = db.Column(db.Integer(), db.ForeignKey('site.site_id'))
     purchaseItem = db.relationship('PurchaseItem', backref='Product')
     productImage = db.relationship('ProductImage', backref='Product', uselist=False)
+    db.UniqueConstraint(product_name, product_location_id, name='unq_product')
 
     def __init__(self,
                  product_name, product_availability, product_discount,
