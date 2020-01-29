@@ -98,18 +98,25 @@ def recent_purchases():
         .filter(PurchaseItem.purchase_item_product_code_uuid == Product.product_code_uuid) \
         .filter(PurchaseItem.purchase_item_purchase_code_uuid == Purchase.purchase_code_uuid) \
         .all()
-    recent_purchases_details = dict()
+    recent_purchases_dict = dict()
     for entry in result:
         recent_product = {
             "product": entry[1].product_name,
             "quantity": entry[2].purchase_item_quantity,
             "price": entry[2].purchase_item_price
         }
-        if entry[0].purchase_code_uuid not in recent_purchases_details.keys():
-            recent_purchases_details[entry[0].purchase_code_uuid] = [recent_product]
+        if entry[0].purchase_code_uuid not in recent_purchases_dict.keys():
+            customer = db.session.query(Customer) \
+                .filter(Customer.customer_mail_address == entry[0].purchase_customer_mail_address) \
+                .first()
+            recent_purchases_dict[entry[0].purchase_code_uuid] = {
+                'product': [recent_product],
+                'first_name': customer.customer_first_name,
+                'last_name': customer.customer_last_name
+            }
         else:
-            recent_purchases_details[entry[0].purchase_code_uuid].append(recent_product)
-    return recent_purchases_details
+            recent_purchases_dict[entry[0].purchase_code_uuid]['product'].append(recent_product)
+    return recent_purchases_dict
 
 
 def gift_purchase(purchase_uuid, customer_mail_address):
