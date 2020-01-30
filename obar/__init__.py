@@ -19,10 +19,10 @@ basedir = os.getcwd()
 def create_app(test_config=None):
     app = Flask(__name__)
     app.logger.info('Current working directory: %s', basedir)
-    srcdir = os.path.join(basedir, 'obar')
+    srcdir = os.path.join(basedir, 'persistent')
 
     app.config.from_mapping(
-        SECRET_KEY='dev',
+        SECRET_KEY='developing',
         SQLALCHEMY_DATABASE_URI='sqlite:///' + os.path.join(srcdir,'obar_database.db'),
         SQLALCHEMY_TRACK_MODIFICATIONS=False
     )
