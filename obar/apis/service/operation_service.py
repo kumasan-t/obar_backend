@@ -2,7 +2,7 @@ from datetime import datetime as dt
 from datetime import timedelta as td
 
 from sqlalchemy.exc import OperationalError
-from werkzeug.exceptions import InternalServerError, NotFound
+from werkzeug.exceptions import InternalServerError, NotFound, PreconditionFailed
 
 from obar.models import db, Product, Customer, Purchase, PurchaseItem
 
@@ -129,6 +129,8 @@ def gift_purchase(purchase_uuid, customer_mail_address):
         .filter(Purchase.purchase_code_uuid == purchase_uuid) \
         .first()
     if result is not None:
+        if result.purchase_customer_mail_address == customer_mail_address:
+            raise PreconditionFailed('Customer is trying to gift his own purchase')
         result.purchase_customer_mail_address = customer_mail_address
         result.purchase_gifted = True
         db.session.commit()
