@@ -1,7 +1,7 @@
 from flask import request, current_app
 from flask_restplus import Namespace, Resource, fields
 from sqlalchemy.exc import OperationalError, IntegrityError
-from werkzeug.exceptions import Conflict, InternalServerError, NotFound, UnprocessableEntity, Unauthorized
+from werkzeug.exceptions import Conflict, InternalServerError, NotFound, UnprocessableEntity, Unauthorized, Forbidden
 
 from obar import db
 from obar.models import Customer
@@ -157,7 +157,7 @@ class CustomerAPI(Resource):
         token = request.headers['Authorization']
         data = Customer.decode_auth_token(token)
         if data['customer'] != mail_address:
-            raise Unauthorized()
+            raise Forbidden()
         customer = Customer.query.filter_by(customer_mail_address=mail_address).first()
         if customer is None:
             raise NotFound()
