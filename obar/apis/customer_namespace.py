@@ -156,7 +156,7 @@ class CustomerAPI(Resource):
         """
         token = request.headers['Authorization']
         data = Customer.decode_auth_token(token)
-        if not data['admin'] and data['customer'] != mail_address:
+        if data['customer'] != mail_address:
             raise Unauthorized()
         customer = Customer.query.filter_by(customer_mail_address=mail_address).first()
         if customer is None:
