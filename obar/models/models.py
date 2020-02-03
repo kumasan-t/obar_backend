@@ -222,5 +222,9 @@ class Site(db.Model):
     __tablename__ = 'site'
 
     site_id = db.Column(db.Integer(), primary_key=True, autoincrement=True)
-    site_address = db.Column(db.String(50), unique=True, nullable=False)
+    site_address = db.Column(db.String())
+    site_city = db.Column(db.String())
+    site_zip_code = db.Column(db.String())
+    site_country = db.Column(db.String())
+    db.UniqueConstraint(site_address, site_city, name='unq_site')
     product = db.relationship('Product', backref='Site')

@@ -23,8 +23,7 @@ site_model_post = site_ns.model('Site Post', site_fields_post)
 @site_ns.route('')
 class SitesAPI(Resource):
 
-    @customer_token_required
-    @site_ns.doc('get_sites', security='JWT')
+    @site_ns.doc('get_sites')
     @site_ns.response(200, 'Return a list of products')
     @site_ns.response(500, 'Internal server error')
     @site_ns.marshal_list_with(site_model)
@@ -48,7 +47,12 @@ class SitesAPI(Resource):
         """
         Creates a new Site
         """
-        site = Site(site_address=request.json['address'])
+        site = Site(
+            site_address=request.json['address'],
+            site_city=request.json['city'],
+            site_zip_code=request.json['zip_code'],
+            site_country=request.json['country']
+        )
         db.session.add(site)
         try:
             db.session.commit()

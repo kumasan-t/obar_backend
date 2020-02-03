@@ -11,7 +11,6 @@ from sqlite3 import Connection as SQLite3Connection
 from obar.apis import customer_namespace, product_namespace, purchase_namespace, \
     operation_namespace, auth_namespace, site_namespace
 
-
 migrate = Migrate()
 basedir = os.getcwd()
 
@@ -19,11 +18,11 @@ basedir = os.getcwd()
 def create_app(test_config=None):
     app = Flask(__name__)
     app.logger.info('Current working directory: %s', basedir)
-    srcdir = os.path.join(basedir, 'persistent')
+    src_dir = os.path.join(basedir, 'persistent')
 
     app.config.from_mapping(
         SECRET_KEY='developing',
-        SQLALCHEMY_DATABASE_URI='sqlite:///' + os.path.join(srcdir,'obar_database.db'),
+        SQLALCHEMY_DATABASE_URI='sqlite:///' + os.path.join(src_dir, 'obar_database.db'),
         SQLALCHEMY_TRACK_MODIFICATIONS=False
     )
 
@@ -57,7 +56,9 @@ def create_app(test_config=None):
         title='OBar',
         version='1.0',
         description='API documentation for OBar web-application <style>.models {display: none !important}</style>',
-        # All API metadatas
+        endpoint='/api',
+        doc='/api'
+        # All API metadata
     )
 
     api.add_namespace(customer_namespace.customer_ns)
@@ -78,7 +79,3 @@ def create_app(test_config=None):
         return 'hello there!'
 
     return app
-
-
-
-
