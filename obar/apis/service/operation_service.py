@@ -18,7 +18,14 @@ def purchase_leaderboard():
         per_user_purchase['customer'] = customer.customer_mail_address
         per_user_purchase['first_name'] = customer.customer_first_name
         per_user_purchase['last_name'] = customer.customer_last_name
-        per_user_purchase['purchases'] = len(customer.purchase)
+        count = 0
+        for purchase in customer.purchase:
+            items = db.session.query(PurchaseItem).filter(
+                purchase.purchase_code_uuid == PurchaseItem.purchase_item_purchase_code_uuid
+            ).all()
+            for item in items:
+                count += item.purchase_item_quantity
+        per_user_purchase['purchases'] = count
         leaderboard.append(per_user_purchase.copy())
     return sorted(leaderboard, key=lambda x: x['purchases'], reverse=True)
 
